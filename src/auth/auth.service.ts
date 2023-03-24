@@ -36,7 +36,7 @@ export class AuthService {
     }
 
     const newUser = this.userRepository.create({ ...userDetails });
-    const newProfile = this.userProfileRepository.update()
+    //const newProfile = this.userProfileRepository.update()
     await this.userRepository.save(newUser);
     const payload = {
       userId: newUser.id,
