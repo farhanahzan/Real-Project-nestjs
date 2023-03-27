@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from "../../typeorm/entities/user.entity";
 import { UnauthorizedException } from "@nestjs/common/exceptions";
+import {Req} from '@nestjs/common'
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -19,19 +20,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload:{userId:string}) {
-    
-
-    const user = await this.userRepository.findOne({where:{
-        id:payload.userId
-    }})
-    if(!user){
-        throw new UnauthorizedException('Login in first')
+  async validate(payload: { userId: string }) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: payload.userId,
+      },
+    });
+    if (!user) {
+      throw new UnauthorizedException('Login in first');
     }
 
-    delete user.password
-
+    delete user.password;
+   
+   
     return user
-
   }
 }

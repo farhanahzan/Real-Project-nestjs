@@ -6,8 +6,9 @@ import { AppService } from './app.service';
 import { User } from './typeorm/entities/user.entity';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { UserProfile } from './typeorm/entities/userProfile.entity';
 
-const entities = [User];
+const entities = [User, UserProfile];
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ const entities = [User];
       database: process.env.DB_NAME,
       synchronize: true,
       entities: entities,
+      logging:true
     }),
     UsersModule,
     AuthModule,
