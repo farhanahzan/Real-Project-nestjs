@@ -1,6 +1,7 @@
-import {Entity, BaseEntity, BeforeInsert, Column, CreateDateColumn, PrimaryGeneratedColumn, OneToOne, JoinColumn, BeforeUpdate} from 'typeorm'
+import {Entity, BaseEntity, BeforeInsert, Column, CreateDateColumn, PrimaryGeneratedColumn, OneToOne, JoinColumn, BeforeUpdate, OneToMany} from 'typeorm'
 import * as bcrypt from 'bcryptjs'  
 import { UserProfile } from './userProfile.entity'
+import { UserFollow } from './userFollow.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -24,6 +25,9 @@ export class User extends BaseEntity {
 
   @OneToOne(() => UserProfile, (userProfile) => userProfile.user)
   userProfile: UserProfile;
+
+  @OneToMany(()=>UserFollow,(userFollow)=>userFollow.user)
+  userFollow:UserFollow[]
 
   @BeforeInsert()
   @BeforeUpdate()

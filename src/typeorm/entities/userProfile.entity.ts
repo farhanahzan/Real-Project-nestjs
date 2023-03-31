@@ -19,7 +19,7 @@ export class UserProfile {
   @Column({ nullable: true })
   image: string;
 
-  @Column({ nullable: true })
+  @Column({nullable: true , default: 'I work at statefarm' })
   bio: string;
 
   @CreateDateColumn()

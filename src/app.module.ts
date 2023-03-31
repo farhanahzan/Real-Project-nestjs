@@ -7,8 +7,10 @@ import { User } from './typeorm/entities/user.entity';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { UserProfile } from './typeorm/entities/userProfile.entity';
+import { UserFollow } from './typeorm/entities/userFollow.entity';
+import { UserFollowerModule } from './user_follower/user_follower.module';
 
-const entities = [User, UserProfile];
+const entities = [User, UserProfile, UserFollow];
 
 @Module({
   imports: [
@@ -28,6 +30,7 @@ const entities = [User, UserProfile];
     }),
     UsersModule,
     AuthModule,
+    UserFollowerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

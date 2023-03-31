@@ -9,15 +9,20 @@ import { JwtService } from '@nestjs/jwt';
 import { UserProfile } from 'src/typeorm/entities/userProfile.entity';
 import * as bcrypt from 'bcryptjs';
 import { UpdateUserDto } from './dto/UpdataUser.dto';
+import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
+import { UserFollowerService } from 'src/user_follower/user_follower.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     private jwtService: JwtService,
+    private userFollowService:UserFollowerService,
     @InjectRepository(UserEntity)
     private userRepo: Repository<UserEntity>,
     @InjectRepository(UserProfile)
     private userProfileRepo: Repository<UserProfile>,
+    @InjectRepository(UserFollow)
+    private userFollowRepo: Repository<UserFollow>,
   ) {}
 
   async signUp(userDetails: CreateUserParams) {
@@ -51,7 +56,7 @@ export class UsersService {
       { accessToken: access_token },
     );
 
-    return await this.reDesignReturn(payload.userId);
+    return await this.returnUser(payload.userId);
     // return this.userRepo.find()
   }
 
@@ -82,14 +87,16 @@ export class UsersService {
   }
 
   async showCurrentUser(user: CreateUserParams) {
-    return user;
+    return this.returnUser(user.id);
   }
   async updateUser(newUpdate: UpdateUserDto, currUser: CreateUserParams) {
     const id = currUser.id;
     // console.log(currUser)
     const { email, username, password, bio, image } = newUpdate;
 
-    const checkEmail = await this.userRepo.count({ where: { email: Equal(email) } });
+    const checkEmail = await this.userRepo.count({
+      where: { email: Equal(email) },
+    });
 
     const checkUsername = await this.userRepo.count({
       where: { username: Equal(username) },
@@ -108,15 +115,34 @@ export class UsersService {
       const hashPassword = await bcrypt.hash(password, 10);
       await this.userRepo.update({ id: id }, { password: hashPassword });
     }
+    if (email || username) {
+      await this.userRepo.update({ id: id }, { email, username });
+    }
+    if (bio || image) {
+      await this.userProfileRepo.update({ userId: id }, { bio, image });
+    }
 
-    await this.userRepo.update({ id: id }, { email, username });
-
-    await this.userProfileRepo.update({ userId: id }, { bio, image });
-
-    return this.reDesignReturn(id);
+    return this.returnUser(id);
   }
 
-  async reDesignReturn(id: string) {
+  //Profile
+
+  async findUserProfileByUsername(username: string) {
+    const userProfileInfo = await this.userProfileRepo.findOne({
+     
+      where: { username: username },
+    });
+
+    const{ bio, image} = userProfileInfo
+
+    //  const checkUserFollowingThisUsername = this.userFollowService.checkFollowingExits(userProfileInfo.userId, userDetail.id)
+    
+    
+    // return { profile: {username:username,...userProfileInfo,following:checkUserFollowingThisUsername } };
+    return 
+  }
+
+  async returnUser(id: string) {
     const userInfo = await this.userRepo.findOne({
       select: {
         email: true,
@@ -134,7 +160,6 @@ export class UsersService {
       where: { userId: id },
     });
 
-    
-    return { ...userInfo, ...userProfileInfo };
+    return { user: { ...userInfo, ...userProfileInfo } };
   }
 }
