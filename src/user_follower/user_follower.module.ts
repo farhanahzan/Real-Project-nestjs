@@ -6,10 +6,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/typeorm/entities/user.entity';
 import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
 import { UserProfile } from 'src/typeorm/entities/userProfile.entity';
-import { UsersModule } from 'src/users/users.module';
-import { UsersService } from 'src/users/users.service';
+import { UsersModule } from '../users/users.module';
+
 import { UserFollowerController } from './user_follower.controller';
 import { UserFollowerService } from './user_follower.service';
+import { UsersService } from 'src/users/users.service';
 
 @Module({
   imports: [

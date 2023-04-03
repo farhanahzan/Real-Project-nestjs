@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { User as UserEntity } from '../typeorm/entities/user.entity';
 
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,13 +10,14 @@ import { UserProfile } from 'src/typeorm/entities/userProfile.entity';
 import * as bcrypt from 'bcryptjs';
 import { UpdateUserDto } from './dto/UpdataUser.dto';
 import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
-import { UserFollowerService } from 'src/user_follower/user_follower.service';
+import { UserFollowerService } from '../user_follower/user_follower.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     private jwtService: JwtService,
-    private userFollowService:UserFollowerService,
+    @Inject(forwardRef(()=> UserFollowerService))
+    private  userFollowService: UserFollowerService,
     @InjectRepository(UserEntity)
     private userRepo: Repository<UserEntity>,
     @InjectRepository(UserProfile)
@@ -49,11 +50,11 @@ export class UsersService {
     });
     await this.userProfileRepo.save(newProfile);
 
-    const access_token = this.jwtService.sign(payload);
+ 
 
     await this.userRepo.update(
       { id: payload.userId },
-      { accessToken: access_token },
+      { accessToken: this.jwtService.sign(payload) },
     );
 
     return await this.returnUser(payload.userId);
@@ -126,20 +127,37 @@ export class UsersService {
   }
 
   //Profile
-
+  //without login
   async findUserProfileByUsername(username: string) {
     const userProfileInfo = await this.userProfileRepo.findOne({
-     
       where: { username: username },
     });
 
-    const{ bio, image} = userProfileInfo
+    const { bio, image } = userProfileInfo;
 
-    //  const checkUserFollowingThisUsername = this.userFollowService.checkFollowingExits(userProfileInfo.userId, userDetail.id)
-    
-    
-    // return { profile: {username:username,...userProfileInfo,following:checkUserFollowingThisUsername } };
-    return 
+    return {
+      profile: { username: username, bio: bio, image: image, following: false },
+    };
+  }
+  //with login
+  async findUserProfileByUsernameWithLogin(username: string, userId:string) {
+    const userProfileInfo = await this.userProfileRepo.findOne({
+      where: { username: username },
+    });
+
+    const { bio, image } = userProfileInfo;
+
+    const checkUserFollowingThisUsername = await this.userFollowService.checkFollowingExits(userProfileInfo.userId, userId)
+
+   
+    return {
+      profile: {
+        username: username,
+        bio: bio,
+        image: image,
+        following: checkUserFollowingThisUsername,
+      },
+    };
   }
 
   async returnUser(id: string) {

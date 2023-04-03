@@ -12,7 +12,7 @@ import { UserFollowerModule } from 'src/user_follower/user_follower.module';
 import { UserFollowerService } from 'src/user_follower/user_follower.service';
 @Module({
   imports: [
-    
+   
     TypeOrmModule.forFeature([User, UserProfile, UserFollow]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({

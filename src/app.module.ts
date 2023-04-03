@@ -26,7 +26,7 @@ const entities = [User, UserProfile, UserFollow];
       database: process.env.DB_NAME,
       synchronize: true,
       entities: entities,
-      logging:true
+      
     }),
     UsersModule,
     AuthModule,

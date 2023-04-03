@@ -12,6 +12,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/CreateUser.dto';
 import { JwtAuthGuard } from 'src/auth/utils/jwtAuth.guard';
 import { UpdateUserDto } from './dto/UpdataUser.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 
 
@@ -45,9 +46,20 @@ export class UsersController {
   }
 
   //profile
-
+  @UseGuards(JwtAuthGuard)
   @Get('profiles/:username')
-  async getProfileByUsername(@Param('username') username: string, @Req() re) {
-    return this.userService.findUserProfileByUsername(username);
+  async getProfileByUsernameWithLogin(
+    @Param('username') username: string,
+    @Req() req,
+  ) {
+    return this.userService.findUserProfileByUsernameWithLogin(
+      username,
+      req.user.id,
+    );
   }
+
+  // @Get('profiles/:username')
+  // async getProfileByUsername(@Param('username') username: string) {
+  //   return this.userService.findUserProfileByUsername(username);
+  // }
 }
