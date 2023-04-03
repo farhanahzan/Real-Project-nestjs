@@ -18,18 +18,6 @@ export class UserFollowerService {
     private userFollowRepo: Repository<UserFollow>,
   ) {}
 
-  // async returnProfile(username:string, userDetail:CreateUserParams){
-  //    const userProfileInfo = await this.userProfileRepo.findOne({
-  //      select: {
-  //        username: true,
-  //        bio: true,
-  //        image: true,
-  //      },
-  //      where: { username: username },
-  //    });
-  //    const following = checkFollowingExits()
-
-  // }
 
   async checkFollowingExits(targetId:string, userId:string){
     const checkFollowing = await this.userFollowRepo.find({

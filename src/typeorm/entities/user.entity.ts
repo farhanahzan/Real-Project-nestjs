@@ -2,6 +2,7 @@ import {Entity, BaseEntity, BeforeInsert, Column, CreateDateColumn, PrimaryGener
 import * as bcrypt from 'bcryptjs'  
 import { UserProfile } from './userProfile.entity'
 import { UserFollow } from './userFollow.entity';
+import { Article } from './article.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -28,6 +29,9 @@ export class User extends BaseEntity {
 
   @OneToMany(()=>UserFollow,(userFollow)=>userFollow.user)
   userFollow:UserFollow[]
+
+  @OneToMany(()=>Article,(article)=>article.user)
+  article:Article[]
 
   @BeforeInsert()
   @BeforeUpdate()

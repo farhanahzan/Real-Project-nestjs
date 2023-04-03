@@ -12,7 +12,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/CreateUser.dto';
 import { JwtAuthGuard } from 'src/auth/utils/jwtAuth.guard';
 import { UpdateUserDto } from './dto/UpdataUser.dto';
-import { AuthGuard } from '@nestjs/passport';
+
 
 
 
@@ -34,8 +34,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('users')
   async getCurrentUser(@Req() req) {
-    // console.log(req.get('Authorization').replace('Bearer', '').trim());
-    // console.log(req.user)
+  
     return this.userService.showCurrentUser(req.user);
   }
 

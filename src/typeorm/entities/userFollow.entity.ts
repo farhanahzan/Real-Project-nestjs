@@ -2,7 +2,7 @@ import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
-  JoinColumn,
+
   ManyToOne,
 } from 'typeorm';
 import { User } from './user.entity';

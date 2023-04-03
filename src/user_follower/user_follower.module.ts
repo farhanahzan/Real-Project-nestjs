@@ -10,7 +10,7 @@ import { UsersModule } from '../users/users.module';
 
 import { UserFollowerController } from './user_follower.controller';
 import { UserFollowerService } from './user_follower.service';
-import { UsersService } from 'src/users/users.service';
+
 
 @Module({
   imports: [
