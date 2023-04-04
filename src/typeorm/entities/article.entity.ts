@@ -7,10 +7,12 @@ import {
   ManyToOne,
   ManyToMany,
   JoinTable,
+  BeforeUpdate,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Tag } from './tag.entity';
 
+import { kebabCase, upperFirst, lowerCase } from 'lodash';
 @Entity()
 export class Article {
   @PrimaryGeneratedColumn('uuid')
@@ -21,6 +23,9 @@ export class Article {
 
   @Column()
   title: string;
+
+  @Column()
+  slug: string;
 
   @Column()
   description: string;
@@ -36,6 +41,11 @@ export class Article {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // @BeforeUpdate()
+  //  updateSlug() {
+  //   this.slug =  kebabCase(this.title);
+  // }
 
   @ManyToOne(() => User, (user) => user.article)
   user: User;

@@ -3,7 +3,7 @@ import { User as UserEntity } from '../typeorm/entities/user.entity';
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Equal, IsNull, Repository } from 'typeorm';
-import { CreateUserParams, UpdateUserParams } from './utils/types';
+import { CreateUserParams } from './utils/types';
 import { ForbiddenException } from '@nestjs/common/exceptions';
 import { JwtService } from '@nestjs/jwt';
 import { UserProfile } from 'src/typeorm/entities/userProfile.entity';

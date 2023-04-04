@@ -1,4 +1,4 @@
-import {  IsString, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
+import {  IsString, IsNotEmpty, IsOptional, IsArray, IsEmpty } from 'class-validator';
 
 
 export class CreateArticleDto {
@@ -14,7 +14,10 @@ export class CreateArticleDto {
   @IsString()
   body: string;
 
+  @IsEmpty()
+  slug: string;
+
   @IsOptional()
   @IsArray()
-  tags:string[]
+  tags: string[];
 }
