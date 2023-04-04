@@ -10,10 +10,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
 import { UserFollowerModule } from 'src/user_follower/user_follower.module';
 import { UserFollowerService } from 'src/user_follower/user_follower.service';
+import { ArticleService } from 'src/article/article.service';
+import { Article } from 'src/typeorm/entities/article.entity';
+import { Tag } from 'src/typeorm/entities/tag.entity';
 @Module({
   imports: [
    
-    TypeOrmModule.forFeature([User, UserProfile, UserFollow]),
+    TypeOrmModule.forFeature([User, UserProfile, UserFollow, Article, Tag]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -24,7 +27,7 @@ import { UserFollowerService } from 'src/user_follower/user_follower.service';
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService,UserFollowerService],
+  providers: [UsersService,UserFollowerService,ArticleService],
   exports: [UsersService],
 })
 export class UsersModule {}

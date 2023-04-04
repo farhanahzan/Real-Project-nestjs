@@ -8,11 +8,13 @@ import {
   ManyToMany,
   JoinTable,
   BeforeUpdate,
+  OneToMany,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Tag } from './tag.entity';
 
 import { kebabCase, upperFirst, lowerCase } from 'lodash';
+import { FavoriteArticle } from './favouriteArticle.entity';
 @Entity()
 export class Article {
   @PrimaryGeneratedColumn('uuid')
@@ -46,6 +48,9 @@ export class Article {
   //  updateSlug() {
   //   this.slug =  kebabCase(this.title);
   // }
+
+  @OneToMany(() => FavoriteArticle, (favoriteArticle) => favoriteArticle.article)
+   favoriteArticle:FavoriteArticle[];
 
   @ManyToOne(() => User, (user) => user.article)
   user: User;

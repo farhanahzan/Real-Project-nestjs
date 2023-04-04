@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Article } from 'src/typeorm/entities/article.entity';
 import { Repository } from 'typeorm';
@@ -9,10 +9,15 @@ import { kebabCase, upperFirst, lowerCase } from 'lodash';
 import { Tag } from 'src/typeorm/entities/tag.entity';
 import { GetArticleQueryDto } from './dto/GetArticleQueryDto.dto';
 import { UserProfile } from 'src/typeorm/entities/userProfile.entity';
+import {NotFoundException} from '@nestjs/common/exceptions'
+import { UsersService } from 'src/users/users.service';
+import { async } from 'rxjs';
 
 @Injectable()
 export class ArticleService {
   constructor(
+    @Inject(UsersService)
+    private readonly userService:UsersService,
     @InjectRepository(UserProfile)
     private userProfileRepo: Repository<UserProfile>,
     @InjectRepository(Article)
@@ -42,7 +47,7 @@ export class ArticleService {
 
     const savedArticle = await this.articleRepo.save(newArticle);
 
-    return savedArticle;
+    return this.returnArticle(savedArticle.slug);
   }
 
   async generateTitleToSlug(title: string) {
@@ -56,8 +61,11 @@ export class ArticleService {
   async updateArticle(articleDetail: UpdateArticleParams, articleSlug: string) {
     const { slug, ...rest } = articleDetail;
 
-    console.log(articleDetail.description);
+     const articleInfo = await this.articleRepo.findOneBy({ slug: slug });
 
+     if (articleInfo === null) {
+       throw new NotFoundException('article not found');
+     }
     if (articleDetail.title) {
       const newSlug = await this.generateTitleToSlug(articleDetail.title);
       const update = await this.articleRepo.update(
@@ -71,10 +79,13 @@ export class ArticleService {
       );
     }
 
-    return articleDetail;
+    return this.returnArticle(slug);
   }
 
   async deleteArticle(articleSlug: string) {
+
+    await this.findArticleBySlug(articleSlug)
+
     return await this.articleRepo.delete({ slug: articleSlug });
   }
 
@@ -86,6 +97,16 @@ export class ArticleService {
       skip: offset,
       take: limit,
     });
+  }
+  async findArticleBySlug(slug:string){
+    const singleArticle = await this.articleRepo.findOneBy({
+      slug: slug,
+    });
+
+    if (singleArticle === null) {
+      throw new NotFoundException('article not Found');
+    }
+    return singleArticle
   }
   async findArticleBYAuther(auther: string) {
     const autherId = await this.userProfileRepo.findOneBy({ username: auther });
@@ -112,6 +133,40 @@ export class ArticleService {
       );
     }
 
-    return filterArticle;
+     const formatArticle = filterArticle.map((article) =>
+      this.returnArticle(article.slug),
+     );
+    
+    return formatArticle;
+
+  }
+
+  async returnArticle(articleSlug:string){
+  
+    const singleArticle = await this.findArticleBySlug(articleSlug)
+    const {slug, title, description, body, tags, createdAt, updatedAt,userId } = singleArticle
+
+    const auther = await this.userProfileRepo.findOneBy({userId:userId})
+    const {username} = auther
+    
+    const authorProfile = await this.userService.findUserProfileByUsername(username)
+    const newAuthorProfile = {
+      author: authorProfile.profile,
+    };
+
+    const article = {
+        slug: slug,
+        title: title,
+        description: description,
+        body: body,
+        tags: tags,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+        favorited: false,
+        favoriteCount: 0,
+        ...newAuthorProfile,
+      }
+      console.log("article:",article)
+    return {article}
   }
 }

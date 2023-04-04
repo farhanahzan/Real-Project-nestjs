@@ -9,10 +9,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Tag } from 'src/typeorm/entities/tag.entity';
 import { UserProfile } from 'src/typeorm/entities/userProfile.entity';
+import { FavoriteArticle } from 'src/typeorm/entities/favouriteArticle.entity';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Article, Tag, UserProfile]),
+    UsersModule,
+    TypeOrmModule.forFeature([User, Article, Tag, UserProfile, FavoriteArticle]),
     PassportModule.register({
       defaultStrategy: 'jwt',
     }),

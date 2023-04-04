@@ -5,7 +5,7 @@ import { JwtAuthGuard } from 'src/auth/utils/jwtAuth.guard';
 import { UpdateArticleDto } from './dto/UpdateArticleDto.dto';
 import { GetArticleQueryDto } from './dto/GetArticleQueryDto.dto';
 
-@Controller('api/article')
+@Controller('api/articles')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
@@ -40,5 +40,11 @@ export class ArticleController {
   ) {
     console.log(query)
     return this.articleService.getArticles(query );
+  }
+
+
+  @Get(':slug')
+  async getSingleArticle(@Param('slug') slug:string){
+    return this.articleService.returnArticle(slug)
   }
 }
