@@ -3,6 +3,7 @@ import * as bcrypt from 'bcryptjs'
 import { UserProfile } from './userProfile.entity'
 import { UserFollow } from './userFollow.entity';
 import { Article } from './article.entity';
+import { Comment } from './comment.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -27,11 +28,14 @@ export class User extends BaseEntity {
   @OneToOne(() => UserProfile, (userProfile) => userProfile.user)
   userProfile: UserProfile;
 
-  @OneToMany(()=>UserFollow,(userFollow)=>userFollow.user)
-  userFollow:UserFollow[]
+  @OneToMany(() => UserFollow, (userFollow) => userFollow.user)
+  userFollow: UserFollow[];
 
-  @OneToMany(()=>Article,(article)=>article.user)
-  article:Article[]
+  @OneToMany(() => Article, (article) => article.user)
+  article: Article[];
+
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comment: Comment[]
 
   @BeforeInsert()
   @BeforeUpdate()

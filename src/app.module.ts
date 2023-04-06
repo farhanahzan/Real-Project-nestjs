@@ -14,8 +14,10 @@ import { ArticleModule } from './article/article.module';
 import { Tag } from './typeorm/entities/tag.entity';
 import { FavoriteArticle } from './typeorm/entities/favouriteArticle.entity';
 import { FavoriteArticleModule } from './favorite_article/favorite_article.module';
+import { CommentModule } from './comment/comment.module';
+import { Comment } from './typeorm/entities/comment.entity';
 
-const entities = [User, UserProfile, UserFollow, Article, Tag, FavoriteArticle];
+const entities = [User, UserProfile, UserFollow, Article, Tag, FavoriteArticle, Comment];
 
 @Module({
   imports: [
@@ -38,6 +40,7 @@ const entities = [User, UserProfile, UserFollow, Article, Tag, FavoriteArticle];
     UserFollowerModule,
     ArticleModule,
     FavoriteArticleModule,
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

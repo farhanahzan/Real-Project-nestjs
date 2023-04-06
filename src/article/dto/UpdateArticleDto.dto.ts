@@ -1,6 +1,6 @@
 import { IsString, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
 
-export class UpdateArticleDto {
+export class UpdatDto {
   @IsOptional()
   @IsString()
   title: string;
@@ -14,4 +14,8 @@ export class UpdateArticleDto {
   body: string;
 
 
+}
+
+export class UpdateArticleDto{
+  article:UpdatDto
 }

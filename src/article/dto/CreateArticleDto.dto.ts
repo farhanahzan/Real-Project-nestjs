@@ -1,7 +1,7 @@
 import {  IsString, IsNotEmpty, IsOptional, IsArray, IsEmpty } from 'class-validator';
 
 
-export class CreateArticleDto {
+export class ArticleDto {
   @IsNotEmpty()
   @IsString()
   title: string;
@@ -19,5 +19,9 @@ export class CreateArticleDto {
 
   @IsOptional()
   @IsArray()
-  tags: string[];
+  tagList: string[];
+}
+
+export class CreateArticleDto{
+  article:ArticleDto
 }

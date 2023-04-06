@@ -25,6 +25,8 @@ import { ArticleModule } from 'src/article/article.module';
     })
   ],
   providers: [FavoriteArticleService],
-  controllers: [FavoriteArticleController]
+  controllers: [FavoriteArticleController],
+  exports:[FavoriteArticleService]
+
 })
 export class FavoriteArticleModule {}

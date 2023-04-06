@@ -34,8 +34,8 @@ export class AuthService {
     return this.userService.returnUser(payload.userId)
   }
 
-  async validateUser(authLoginDto: AuthLoginDto): Promise<UserEntity> {
-    const { email, password } = authLoginDto;
+  async validateUser(authLoginDto: AuthLoginDto) {
+    const { email, password } = authLoginDto.user;
 
     const user = await this.userService.findByEmail(email);
     if (!(await user?.validatePassword(password))) {

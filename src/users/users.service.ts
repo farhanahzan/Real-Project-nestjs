@@ -3,7 +3,7 @@ import { User as UserEntity } from '../typeorm/entities/user.entity';
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Equal, IsNull, Repository } from 'typeorm';
-import { CreateUserParams } from './utils/types';
+import { CreateUserParams, UserParams } from './utils/types';
 import { ForbiddenException } from '@nestjs/common/exceptions';
 import { JwtService } from '@nestjs/jwt';
 import { UserProfile } from 'src/typeorm/entities/userProfile.entity';
@@ -11,23 +11,27 @@ import * as bcrypt from 'bcryptjs';
 import { UpdateUserDto } from './dto/UpdataUser.dto';
 import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
 import { UserFollowerService } from '../user_follower/user_follower.service';
+import { Tag } from 'src/typeorm/entities/tag.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     private jwtService: JwtService,
-    @Inject(forwardRef(()=> UserFollowerService))
-    private  userFollowService: UserFollowerService,
+    @Inject(forwardRef(() => UserFollowerService))
+    private userFollowService: UserFollowerService,
     @InjectRepository(UserEntity)
     private userRepo: Repository<UserEntity>,
     @InjectRepository(UserProfile)
     private userProfileRepo: Repository<UserProfile>,
     @InjectRepository(UserFollow)
     private userFollowRepo: Repository<UserFollow>,
+    @InjectRepository(Tag)
+    private tagRepo: Repository<Tag>,
   ) {}
 
   async signUp(userDetails: CreateUserParams) {
-    const { email, username, ...rest } = userDetails;
+    const user = userDetails.user;
+    const { email, username, ...rest } = user;
     const checkEmail = await this.findByEmail(email);
     const checkUsername = await this.findByUsername(username);
 
@@ -38,7 +42,7 @@ export class UsersService {
       throw new ForbiddenException('Username Already exists');
     }
 
-    const newUser = this.userRepo.create({ ...userDetails });
+    const newUser = this.userRepo.create({ ...user });
     await this.userRepo.save(newUser);
     const payload = {
       userId: newUser.id,
@@ -49,8 +53,6 @@ export class UsersService {
       user: newUser,
     });
     await this.userProfileRepo.save(newProfile);
-
- 
 
     await this.userRepo.update(
       { id: payload.userId },
@@ -87,13 +89,15 @@ export class UsersService {
     });
   }
 
-  async showCurrentUser(user: CreateUserParams) {
-    return this.returnUser(user.id);
+  async showCurrentUser(userDetails: UserParams) {
+  
+  
+    return await this.returnUser(userDetails.id);
   }
-  async updateUser(newUpdate: UpdateUserDto, currUser: CreateUserParams) {
+  async updateUser(newUpdate: UpdateUserDto, currUser: UserParams) {
     const id = currUser.id;
     // console.log(currUser)
-    const { email, username, password, bio, image } = newUpdate;
+    const { email, username, password, bio, image } = newUpdate.user;
 
     const checkEmail = await this.userRepo.count({
       where: { email: Equal(email) },
@@ -103,7 +107,7 @@ export class UsersService {
       where: { username: Equal(username) },
     });
 
-    console.log(checkUsername);
+  
 
     if (checkEmail > 1) {
       throw new ForbiddenException('Email Already exists');
@@ -127,35 +131,29 @@ export class UsersService {
   }
 
   //Profile
-  //without login
-  async findUserProfileByUsername(username: string) {
-    const userProfileInfo = await this.userProfileRepo.findOne({
-      where: { username: username },
-    });
 
-    const { bio, image } = userProfileInfo;
-
-    return {
-      profile: { username: username, bio: bio, image: image, following: false },
-    };
-  }
   //with login
-  async findUserProfileByUsernameWithLogin(username: string, userId:string) {
+  async returnProfile(username: string, userDetail: any | UserParams) {
     const userProfileInfo = await this.userProfileRepo.findOne({
       where: { username: username },
     });
 
     const { bio, image } = userProfileInfo;
 
-    const checkUserFollowingThisUsername = await this.userFollowService.checkFollowingExits(userProfileInfo.userId, userId)
+    let following = false;
+    if (Object.keys(userDetail).length > 0) {
+      following = await this.userFollowService.checkFollowingExits(
+        userProfileInfo.userId,
+        userDetail.id,
+      );
+    }
 
-   
     return {
       profile: {
         username: username,
         bio: bio,
         image: image,
-        following: checkUserFollowingThisUsername,
+        following: following,
       },
     };
   }
@@ -180,4 +178,12 @@ export class UsersService {
 
     return { user: { ...userInfo, ...userProfileInfo } };
   }
+
+  async getAllTags() {
+    const findTags = await this.tagRepo.find();
+    const tags = findTags.map((tag) => tag.tag);
+    return { tags };
+  }
 }
+
+

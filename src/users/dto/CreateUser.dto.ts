@@ -5,7 +5,7 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 
-export class CreateUserDto{
+export class UserDto{
     @IsNotEmpty()
     @IsAlphanumeric()
     username:string
@@ -17,4 +17,8 @@ export class CreateUserDto{
     @IsNotEmpty()
     @IsString()
     password:string
+}
+
+export class CreateUserDto{
+  user:UserDto
 }

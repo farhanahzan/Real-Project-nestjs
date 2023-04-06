@@ -15,6 +15,7 @@ import { Tag } from './tag.entity';
 
 import { kebabCase, upperFirst, lowerCase } from 'lodash';
 import { FavoriteArticle } from './favouriteArticle.entity';
+import { Comment } from './comment.entity';
 @Entity()
 export class Article {
   @PrimaryGeneratedColumn('uuid')
@@ -36,7 +37,7 @@ export class Article {
   body: string;
 
   @Column('simple-array')
-  tags: string[];
+  tagList: string[];
 
   @CreateDateColumn()
   createdAt: Date;
@@ -49,11 +50,17 @@ export class Article {
   //   this.slug =  kebabCase(this.title);
   // }
 
-  @OneToMany(() => FavoriteArticle, (favoriteArticle) => favoriteArticle.article)
-   favoriteArticle:FavoriteArticle[];
+  @OneToMany(
+    () => FavoriteArticle,
+    (favoriteArticle) => favoriteArticle.article,
+  )
+  favoriteArticle: FavoriteArticle[];
 
   @ManyToOne(() => User, (user) => user.article)
   user: User;
+
+  @OneToMany(() => Comment, (comment) => comment.article)
+  comment: Comment[];
 
   @ManyToMany(() => Tag, (tag) => tag.article)
   @JoinTable()

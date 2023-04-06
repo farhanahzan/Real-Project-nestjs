@@ -1,11 +1,11 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
-import { NotFoundException, ConflictException } from '@nestjs/common/exceptions';
+import { NotFoundException } from '@nestjs/common/exceptions';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
 import { UserProfile } from 'src/typeorm/entities/userProfile.entity';
 import { UsersService } from 'src/users/users.service';
-import { CreateUserParams } from 'src/users/utils/types';
-import { ObjectID, Repository } from 'typeorm';
+import { CreateUserParams, UserParams } from 'src/users/utils/types';
+import {  Repository } from 'typeorm';
 
 @Injectable()
 export class UserFollowerService {
@@ -35,7 +35,7 @@ export class UserFollowerService {
   }
 
 
-  async followUser(username: string, userDetail: CreateUserParams) {
+  async followUser(username: string, userDetail: UserParams) {
     const userInfo = await this.userProfileRepo.findOneBy({
       username: username,
     });
@@ -58,10 +58,10 @@ export class UserFollowerService {
    
 
     
-    return this.usersService.findUserProfileByUsernameWithLogin(username, userDetail.id);
+    return this.usersService.returnProfile(username, userDetail);
   }
 
-   async unFollowUser(username: string, userDetail: CreateUserParams){
+   async unFollowUser(username: string, userDetail: UserParams){
      const userInfo = await this.userProfileRepo.findOneBy({
        username: username,
      });
@@ -86,9 +86,9 @@ export class UserFollowerService {
        const addFollower = await this.userFollowRepo.delete(findId.id)
      }
 
-     return await this.usersService.findUserProfileByUsernameWithLogin(
+     return await this.usersService.returnProfile(
        username,
-       userDetail.id,
+       userDetail,
      );
    }
 

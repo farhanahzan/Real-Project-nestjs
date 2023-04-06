@@ -13,10 +13,13 @@ import { UserFollowerService } from 'src/user_follower/user_follower.service';
 import { ArticleService } from 'src/article/article.service';
 import { Article } from 'src/typeorm/entities/article.entity';
 import { Tag } from 'src/typeorm/entities/tag.entity';
+import { FavoriteArticle } from 'src/typeorm/entities/favouriteArticle.entity';
+import { Comment } from 'src/typeorm/entities/comment.entity';
+import { CommentService } from 'src/comment/comment.service';
 @Module({
   imports: [
    
-    TypeOrmModule.forFeature([User, UserProfile, UserFollow, Article, Tag]),
+    TypeOrmModule.forFeature([User, UserProfile, UserFollow, Article, Tag,FavoriteArticle, Comment]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -27,7 +30,7 @@ import { Tag } from 'src/typeorm/entities/tag.entity';
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService,UserFollowerService,ArticleService],
+  providers: [UsersService,UserFollowerService,ArticleService,CommentService],
   exports: [UsersService],
 })
 export class UsersModule {}
