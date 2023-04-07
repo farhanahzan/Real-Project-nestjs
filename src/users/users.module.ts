@@ -3,13 +3,13 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import {TypeOrmModule} from '@nestjs/typeorm'
 import { User } from 'src/typeorm/entities/user.entity';
-import { UserProfile } from 'src/typeorm/entities/userProfile.entity';
+// import { UserProfile } from 'src/typeorm/entities/userProfile.entity';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
-import { UserFollowerModule } from 'src/user_follower/user_follower.module';
-import { UserFollowerService } from 'src/user_follower/user_follower.service';
+// import { UserFollowerModule } from 'src/user_follower/user_follower.module';
+// import { UserFollowerService } from 'src/user_follower/user_follower.service';
 import { ArticleService } from 'src/article/article.service';
 import { Article } from 'src/typeorm/entities/article.entity';
 import { Tag } from 'src/typeorm/entities/tag.entity';
@@ -20,7 +20,7 @@ import { UsersRepository } from './users.repository';
 @Module({
   imports: [
    
-    TypeOrmModule.forFeature([User, UserProfile, UserFollow, Article, Tag,FavoriteArticle, Comment]),
+    TypeOrmModule.forFeature([User, UserFollow, Article, Tag,FavoriteArticle, Comment]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       inject: [ConfigService],

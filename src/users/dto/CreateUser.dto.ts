@@ -3,6 +3,8 @@ import {
   IsEmail,
   IsString,
   IsNotEmpty,
+  IsOptional,
+  IsUrl
 } from 'class-validator';
 
 export class UserDto{
@@ -17,6 +19,14 @@ export class UserDto{
     @IsNotEmpty()
     @IsString()
     password:string
+
+    @IsOptional()
+    @IsUrl()
+    image:string
+
+    @IsOptional()
+    @IsString()
+    bio:string
 }
 
 export class CreateUserDto{

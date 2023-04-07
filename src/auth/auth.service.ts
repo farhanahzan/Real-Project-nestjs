@@ -27,10 +27,10 @@ export class AuthService {
     };
     const access_token = this.jwtService.sign(payload);
 
-    await this.userRepo.update(
-      { id: payload.userId },
-      { accessToken: access_token },
-    );
+    // await this.userRepo.update(
+    //   { id: payload.userId },
+    //   { accessToken: access_token },
+    // );
     return this.userService.returnUser(payload.userId)
   }
 

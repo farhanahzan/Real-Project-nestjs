@@ -1,6 +1,6 @@
 import {Entity, BaseEntity, BeforeInsert, Column, CreateDateColumn, PrimaryGeneratedColumn, OneToOne, JoinColumn, BeforeUpdate, OneToMany} from 'typeorm'
 import * as bcrypt from 'bcryptjs'  
-import { UserProfile } from './userProfile.entity'
+// import { UserProfile } from './userProfile.entity'
 import { UserFollow } from './userFollow.entity';
 import { Article } from './article.entity';
 import { Comment } from './comment.entity';
@@ -16,17 +16,23 @@ export class User extends BaseEntity {
   @Column()
   username: string;
 
-  @Column()
+  @Column({ select: false })
   password: string;
+
+  @Column({ nullable: true })
+  image: string;
+
+  @Column({ nullable: true, default: 'I work at statefarm' })
+  bio: string;
 
   @CreateDateColumn()
   createdAt: Date;
 
-  @Column({ nullable: true })
-  accessToken: string;
+  // @Column({ nullable: true })
+  // accessToken: string;
 
-  @OneToOne(() => UserProfile, (userProfile) => userProfile.user)
-  userProfile: UserProfile;
+  // @OneToOne(() => UserProfile, (userProfile) => userProfile.user)
+  // userProfile: UserProfile;
 
   @OneToMany(() => UserFollow, (userFollow) => userFollow.user)
   userFollow: UserFollow[];
@@ -35,7 +41,7 @@ export class User extends BaseEntity {
   article: Article[];
 
   @OneToMany(() => Comment, (comment) => comment.user)
-  comment: Comment[]
+  comment: Comment[];
 
   @BeforeInsert()
   @BeforeUpdate()

@@ -3,6 +3,8 @@ export type UserParams = {
   email: string;
   password: string;
   username: string;
+  image?:string
+  bio?:string
 };
 
 export type CreateUserParams={

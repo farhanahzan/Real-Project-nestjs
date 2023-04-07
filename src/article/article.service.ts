@@ -9,21 +9,22 @@ import { kebabCase, upperFirst, lowerCase } from 'lodash';
 
 import { Tag } from 'src/typeorm/entities/tag.entity';
 import { GetArticleQueryDto } from './dto/GetArticleQueryDto.dto';
-import { UserProfile } from 'src/typeorm/entities/userProfile.entity';
+// import { UserProfile } from 'src/typeorm/entities/userProfile.entity';
 import { NotFoundException } from '@nestjs/common/exceptions';
 import { UsersService } from 'src/users/users.service';
 import { FavoriteArticleService } from 'src/favorite_article/favorite_article.service';
 import { FavoriteArticle } from 'src/typeorm/entities/favouriteArticle.entity';
 import { CreateUserParams, UserParams } from 'src/users/utils/types';
 import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
+import { User } from 'src/typeorm/entities/user.entity';
 
 @Injectable()
 export class ArticleService {
   constructor(
     @Inject(UsersService)
     private readonly userService: UsersService,
-    @InjectRepository(UserProfile)
-    private userProfileRepo: Repository<UserProfile>,
+    // @InjectRepository(UserProfile)
+    // private userProfileRepo: Repository<UserProfile>,
     @InjectRepository(Article)
     private articleRepo: Repository<Article>,
     @InjectRepository(Tag)
@@ -32,13 +33,15 @@ export class ArticleService {
     private favoriteArticleRepo: Repository<FavoriteArticle>,
     @InjectRepository(UserFollow)
     private userFollowRepo: Repository<UserFollow>,
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
   ) {}
 
   async createArticle(
     articleDetail: CreateArticleParams,
     userDetail: UserParams,
   ) {
-    const { title, body, description, tagList} = articleDetail.article;
+    const { title, body, description, tagList } = articleDetail.article;
 
     //save tag
     for (const tagName of tagList) {
@@ -74,7 +77,7 @@ export class ArticleService {
     articleSlug: string,
     userDetail: UserParams,
   ) {
-    const { slug, ...rest} = articleDetail.article;
+    const { slug, ...rest } = articleDetail.article;
 
     const articleInfo = await this.articleRepo.findOneBy({ slug: articleSlug });
 
@@ -82,10 +85,12 @@ export class ArticleService {
       throw new NotFoundException('article not found');
     }
     if (articleDetail.article.title) {
-      const newSlug = await this.generateTitleToSlug(articleDetail.article.title);
+      const newSlug = await this.generateTitleToSlug(
+        articleDetail.article.title,
+      );
       const update = await this.articleRepo.update(
         { slug: articleSlug },
-        { ...rest ,slug:newSlug},
+        { ...rest, slug: newSlug },
       );
       return await this.returnArticle(newSlug, userDetail);
     } else {
@@ -95,8 +100,6 @@ export class ArticleService {
       );
       return await this.returnArticle(articleSlug, userDetail);
     }
-
-    
   }
 
   async deleteArticle(articleSlug: string) {
@@ -125,20 +128,20 @@ export class ArticleService {
     return singleArticle;
   }
   async findArticleBYAuther(auther: string) {
-    const autherId = await this.userProfileRepo.findOneBy({ username: auther });
+    const autherId = await this.userRepo.findOneBy({ username: auther });
 
-    return autherId.userId;
+    return autherId.id;
   }
 
   async findUserId(username: string) {
-    const user = await this.userProfileRepo.findOneBy({ username: username });
+    const user = await this.userRepo.findOneBy({ username: username });
     if (user === null) {
       throw new NotFoundException('username not found');
     }
-    return user.userId;
+    return user.id;
   }
 
-  async getArticles(query: GetArticleQueryDto, user: any|UserParams) {
+  async getArticles(query: GetArticleQueryDto, user: any | UserParams) {
     let { tag, auther, favorited, limit = 20, offset = 0 } = query;
 
     let filterArticle = await this.getAllArticle(limit, offset);
@@ -186,12 +189,16 @@ export class ArticleService {
 
     let filterArticle = await this.getAllArticle(limit, offset);
 
-    const findFollowers = await this.userFollowRepo.find({select:{followerId:true}, where:{userId:userDetail.id}})
-    
+    const findFollowers = await this.userFollowRepo.find({
+      select: { followerId: true },
+      where: { userId: userDetail.id },
+    });
 
-    const followerIds = findFollowers.map((follower)=>follower.followerId)
+    const followerIds = findFollowers.map((follower) => follower.followerId);
 
-    filterArticle = filterArticle.filter((follower)=> followerIds.some((id)=>id===follower.userId))
+    filterArticle = filterArticle.filter((follower) =>
+      followerIds.some((id) => id === follower.userId),
+    );
 
     const articles = await Promise.all(
       filterArticle.map(async (article) => {
@@ -230,7 +237,7 @@ export class ArticleService {
     }
   }
 
-  async returnArticle(articleSlug: string, user: any|UserParams) {
+  async returnArticle(articleSlug: string, user: any | UserParams) {
     const singleArticle = await this.findArticleBySlug(articleSlug);
     const {
       id: articleId,
@@ -244,7 +251,7 @@ export class ArticleService {
       userId,
     } = singleArticle;
 
-    const auther = await this.userProfileRepo.findOneBy({ userId: userId });
+    const auther = await this.userRepo.findOneBy({ id: userId });
     const { username } = auther;
 
     const authorProfile = await this.userService.returnProfile(username, user);
