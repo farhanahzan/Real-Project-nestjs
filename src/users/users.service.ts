@@ -1,8 +1,7 @@
 import { Injectable} from '@nestjs/common';
 import { User as UserEntity } from '../typeorm/entities/user.entity';
 
-import { InjectRepository } from '@nestjs/typeorm';
-import {  Repository } from 'typeorm';
+
 import { CreateUserParams, UserParams } from './utils/types';
 import {
   ForbiddenException,
@@ -10,9 +9,7 @@ import {
 } from '@nestjs/common/exceptions';
 import { JwtService } from '@nestjs/jwt';
 import { UpdateUserDto } from './dto/UpdataUser.dto';
-import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
 
-import { Tag } from 'src/typeorm/entities/tag.entity';
 import { UsersRepository } from './users.repository';
 
 @Injectable()

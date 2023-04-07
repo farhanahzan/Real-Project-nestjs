@@ -5,9 +5,7 @@ import { AuthLoginDto } from './dto/authLogin.dto';
 import {
   UnauthorizedException,
 } from '@nestjs/common/exceptions';
-import { User as UserEntity } from '../typeorm/entities/user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+
 
 
 @Injectable()
@@ -15,8 +13,7 @@ export class AuthService {
   constructor(
     private userService: UsersService,
     private jwtService: JwtService,
-    @InjectRepository(UserEntity)
-    private userRepo: Repository<UserEntity>,
+  
   ) {}
 
   async login(authLoginDto: AuthLoginDto) {
@@ -25,12 +22,7 @@ export class AuthService {
     const payload = {
       userId: user.id,
     };
-    const access_token = this.jwtService.sign(payload);
-
-    // await this.userRepo.update(
-    //   { id: payload.userId },
-    //   { accessToken: access_token },
-    // );
+   
     return this.userService.returnUser(payload.userId)
   }
 

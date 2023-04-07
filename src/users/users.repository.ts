@@ -5,13 +5,9 @@ import { User } from "src/typeorm/entities/user.entity";
 import { UserFollow } from "src/typeorm/entities/userFollow.entity";
 import { Equal, Repository } from "typeorm";
 import { UserParams } from "./utils/types";
-import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from 'bcryptjs';
 
-import {
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common/exceptions';
+
 import { UpdateUserDto } from "./dto/UpdataUser.dto";
 
 @Injectable()
@@ -66,7 +62,6 @@ export class UsersRepository {
 
   async updateUser(newUpdate: UpdateUserDto, currUser: UserParams) {
     const id = currUser.id;
-    // console.log(currUser)
     const { email, username, password, bio, image } = newUpdate.user;
     if (password) {
       const hashPassword = await bcrypt.hash(password, 10);

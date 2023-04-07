@@ -3,7 +3,7 @@ import {forwardRef} from '@nestjs/common/utils'
 import { InjectRepository } from '@nestjs/typeorm';
 import { Article } from 'src/typeorm/entities/article.entity';
 import { FavoriteArticle } from 'src/typeorm/entities/favouriteArticle.entity';
-import { CreateUserParams, UserParams } from 'src/users/utils/types';
+import {UserParams } from 'src/users/utils/types';
 import { Repository } from 'typeorm';
 import {NotFoundException} from '@nestjs/common/exceptions'
 import { ArticleService } from 'src/article/article.service';
