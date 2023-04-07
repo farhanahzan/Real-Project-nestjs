@@ -11,19 +11,19 @@ import {
 import { UserFollowerService } from './user_follower.service';
 import { JwtAuthGuard } from 'src/auth/utils/jwtAuth.guard';
 
-@Controller('api/profiles')
+@Controller('profiles')
 export class UserFollowerController {
-  constructor(private readonly userFollowerService: UserFollowerService) {}
+  // constructor(private readonly userFollowerService: UserFollowerService) {}
 
-  @UseGuards(JwtAuthGuard)
-  @Post(':username/follow')
-  async followUser(@Param('username') username: string, @Req() req) {
-    return this.userFollowerService.followUser(username, req.user);
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Post(':username/follow')
+  // async followUser(@Param('username') username: string, @Req() req) {
+  //   return this.userFollowerService.followUser(username, req.user);
+  // }
 
-  @UseGuards(JwtAuthGuard)
-  @Delete(':username/follow')
-  async unFollowUser(@Param('username') username: string, @Req() req) {
-    return this.userFollowerService.unFollowUser(username, req.user);
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Delete(':username/follow')
+  // async unFollowUser(@Param('username') username: string, @Req() req) {
+  //   return this.userFollowerService.unFollowUser(username, req.user);
+  // }
 }

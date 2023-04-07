@@ -9,87 +9,87 @@ import {  Repository } from 'typeorm';
 
 @Injectable()
 export class UserFollowerService {
-  constructor(
-    @Inject(forwardRef(()=> UsersService))
-    private  usersService:UsersService,
-    @InjectRepository(UserProfile)
-    private userProfileRepo: Repository<UserProfile>,
-    @InjectRepository(UserFollow)
-    private userFollowRepo: Repository<UserFollow>,
-  ) {}
+  // constructor(
+  //   @Inject(forwardRef(()=> UsersService))
+  //   private  usersService:UsersService,
+  //   @InjectRepository(UserProfile)
+  //   private userProfileRepo: Repository<UserProfile>,
+  //   @InjectRepository(UserFollow)
+  //   private userFollowRepo: Repository<UserFollow>,
+  // ) {}
 
 
-  async checkFollowingExits(targetId:string, userId:string){
-    const checkFollowing = await this.userFollowRepo.find({
-      where: {
-        followerId: targetId,
-        userId: userId,
-      },
-    });
+  // async checkFollowingExits(targetId:string, userId:string){
+  //   const checkFollowing = await this.userFollowRepo.find({
+  //     where: {
+  //       followerId: targetId,
+  //       userId: userId,
+  //     },
+  //   });
     
-    if(checkFollowing === null || checkFollowing.length === 0){
-      return false
-    }else{
-      return true
-    }
-  }
+  //   if(checkFollowing === null || checkFollowing.length === 0){
+  //     return false
+  //   }else{
+  //     return true
+  //   }
+  // }
 
 
-  async followUser(username: string, userDetail: UserParams) {
-    const userInfo = await this.userProfileRepo.findOneBy({
-      username: username,
-    });
+  // async followUser(username: string, userDetail: UserParams) {
+  //   const userInfo = await this.userProfileRepo.findOneBy({
+  //     username: username,
+  //   });
 
-    if (userInfo === null) {
-      throw new NotFoundException('Username Not Found');
-    }
+  //   if (userInfo === null) {
+  //     throw new NotFoundException('Username Not Found');
+  //   }
 
-    const targetId = userInfo.userId;
-   const checkFollow= await this.checkFollowingExits(targetId, userDetail.id);
+  //   const targetId = userInfo.userId;
+  //  const checkFollow= await this.checkFollowingExits(targetId, userDetail.id);
 
     
-    if (!checkFollow) {
-      const addFollower = this.userFollowRepo.create({
-        followerId: targetId,
-        userId: userDetail.id,
-      });
-      await this.userFollowRepo.save(addFollower);
-    }
+  //   if (!checkFollow) {
+  //     const addFollower = this.userFollowRepo.create({
+  //       followerId: targetId,
+  //       userId: userDetail.id,
+  //     });
+  //     await this.userFollowRepo.save(addFollower);
+  //   }
    
 
     
-    return this.usersService.returnProfile(username, userDetail);
-  }
+  //   return this.usersService.returnProfile(username, userDetail);
+  // }
 
-   async unFollowUser(username: string, userDetail: UserParams){
-     const userInfo = await this.userProfileRepo.findOneBy({
-       username: username,
-     });
+  //  async unFollowUser(username: string, userDetail: UserParams){
+  //    const userInfo = await this.userProfileRepo.findOneBy({
+  //      username: username,
+  //    });
 
-     if (userInfo === null) {
-       throw new NotFoundException('Username Not Found');
-     }
+  //    if (userInfo === null) {
+  //      throw new NotFoundException('Username Not Found');
+  //    }
 
-     const targetId = userInfo.userId;
-     const checkFollow = await this.checkFollowingExits(
-       targetId,
-       userDetail.id,
-     );
+  //    const targetId = userInfo.userId;
+  //    const checkFollow = await this.checkFollowingExits(
+  //      targetId,
+  //      userDetail.id,
+  //    );
 
-     if (checkFollow) {
-      const findId = await this.userFollowRepo.findOne({
-        where: {
-          followerId: targetId,
-          userId: userDetail.id,
-        },
-      });
-       const addFollower = await this.userFollowRepo.delete(findId.id)
-     }
+  //    if (checkFollow) {
+  //     const findId = await this.userFollowRepo.findOne({
+  //       where: {
+  //         followerId: targetId,
+  //         userId: userDetail.id,
+  //       },
+  //     });
+  //      const addFollower = await this.userFollowRepo.delete(findId.id)
+  //    }
 
-     return await this.usersService.returnProfile(
-       username,
-       userDetail,
-     );
-   }
+  //    return await this.usersService.returnProfile(
+  //      username,
+  //      userDetail,
+  //    );
+  //  }
 
 }

@@ -16,6 +16,7 @@ import { Tag } from 'src/typeorm/entities/tag.entity';
 import { FavoriteArticle } from 'src/typeorm/entities/favouriteArticle.entity';
 import { Comment } from 'src/typeorm/entities/comment.entity';
 import { CommentService } from 'src/comment/comment.service';
+import { UsersRepository } from './users.repository';
 @Module({
   imports: [
    
@@ -30,7 +31,7 @@ import { CommentService } from 'src/comment/comment.service';
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService,UserFollowerService,ArticleService,CommentService],
+  providers: [UsersService,ArticleService,CommentService, UsersRepository],
   exports: [UsersService],
 })
 export class UsersModule {}

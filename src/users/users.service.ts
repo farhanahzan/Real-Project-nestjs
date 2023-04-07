@@ -4,7 +4,10 @@ import { User as UserEntity } from '../typeorm/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Equal, IsNull, Repository } from 'typeorm';
 import { CreateUserParams, UserParams } from './utils/types';
-import { ForbiddenException } from '@nestjs/common/exceptions';
+import {
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common/exceptions';
 import { JwtService } from '@nestjs/jwt';
 import { UserProfile } from 'src/typeorm/entities/userProfile.entity';
 import * as bcrypt from 'bcryptjs';
@@ -12,13 +15,13 @@ import { UpdateUserDto } from './dto/UpdataUser.dto';
 import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
 import { UserFollowerService } from '../user_follower/user_follower.service';
 import { Tag } from 'src/typeorm/entities/tag.entity';
+import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
   constructor(
     private jwtService: JwtService,
-    @Inject(forwardRef(() => UserFollowerService))
-    private userFollowService: UserFollowerService,
+
     @InjectRepository(UserEntity)
     private userRepo: Repository<UserEntity>,
     @InjectRepository(UserProfile)
@@ -27,40 +30,13 @@ export class UsersService {
     private userFollowRepo: Repository<UserFollow>,
     @InjectRepository(Tag)
     private tagRepo: Repository<Tag>,
+    private userRepository: UsersRepository,
   ) {}
 
   async signUp(userDetails: CreateUserParams) {
     const user = userDetails.user;
-    const { email, username, ...rest } = user;
-    const checkEmail = await this.findByEmail(email);
-    const checkUsername = await this.findByUsername(username);
 
-    if (checkEmail) {
-      throw new ForbiddenException('Email Already exists');
-    }
-    if (checkUsername) {
-      throw new ForbiddenException('Username Already exists');
-    }
-
-    const newUser = this.userRepo.create({ ...user });
-    await this.userRepo.save(newUser);
-    const payload = {
-      userId: newUser.id,
-    };
-
-    const newProfile = this.userProfileRepo.create({
-      username: username,
-      user: newUser,
-    });
-    await this.userProfileRepo.save(newProfile);
-
-    await this.userRepo.update(
-      { id: payload.userId },
-      { accessToken: this.jwtService.sign(payload) },
-    );
-
-    return await this.returnUser(payload.userId);
-    // return this.userRepo.find()
+    return await this.userRepository.signUp(user);
   }
 
   async showById(id: string): Promise<UserEntity> {
@@ -71,27 +47,17 @@ export class UsersService {
   }
 
   async findById(id: string) {
-    return await this.userRepo.findOne({ where: { id: id } });
+    return await this.userRepository.findById(id)
   }
 
   async findByEmail(email: string) {
-    return await this.userRepo.findOne({
-      where: {
-        email: email,
-      },
-    });
+    return await this.userRepository.findByEmail(email)
   }
   async findByUsername(username: string) {
-    return await this.userRepo.findOne({
-      where: {
-        username: username,
-      },
-    });
+   return await this.userRepository.findByUsername(username)
   }
 
   async showCurrentUser(userDetails: UserParams) {
-  
-  
     return await this.returnUser(userDetails.id);
   }
   async updateUser(newUpdate: UpdateUserDto, currUser: UserParams) {
@@ -106,8 +72,6 @@ export class UsersService {
     const checkUsername = await this.userRepo.count({
       where: { username: Equal(username) },
     });
-
-  
 
     if (checkEmail > 1) {
       throw new ForbiddenException('Email Already exists');
@@ -142,7 +106,7 @@ export class UsersService {
 
     let following = false;
     if (Object.keys(userDetail).length > 0) {
-      following = await this.userFollowService.checkFollowingExits(
+      following = await this.checkFollowingExits(
         userProfileInfo.userId,
         userDetail.id,
       );
@@ -159,24 +123,7 @@ export class UsersService {
   }
 
   async returnUser(id: string) {
-    const userInfo = await this.userRepo.findOne({
-      select: {
-        email: true,
-        username: true,
-        accessToken: true,
-      },
-
-      where: { id: id },
-    });
-    const userProfileInfo = await this.userProfileRepo.findOne({
-      select: {
-        bio: true,
-        image: true,
-      },
-      where: { userId: id },
-    });
-
-    return { user: { ...userInfo, ...userProfileInfo } };
+   await this.userRepository.returnUser(id)
   }
 
   async getAllTags() {
@@ -184,6 +131,69 @@ export class UsersService {
     const tags = findTags.map((tag) => tag.tag);
     return { tags };
   }
+
+  //user_follower
+
+  async checkFollowingExits(targetId: string, userId: string) {
+    const checkFollowing = await this.userFollowRepo.find({
+      where: {
+        followerId: targetId,
+        userId: userId,
+      },
+    });
+
+    if (checkFollowing === null || checkFollowing.length === 0) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  async followUser(username: string, userDetail: UserParams) {
+    const userInfo = await this.userProfileRepo.findOneBy({
+      username: username,
+    });
+
+    if (userInfo === null) {
+      throw new NotFoundException('Username Not Found');
+    }
+
+    const targetId = userInfo.userId;
+    const checkFollow = await this.checkFollowingExits(targetId, userDetail.id);
+
+    if (!checkFollow) {
+      const addFollower = this.userFollowRepo.create({
+        followerId: targetId,
+        userId: userDetail.id,
+      });
+      await this.userFollowRepo.save(addFollower);
+    }
+
+    return this.returnProfile(username, userDetail);
+  }
+
+  async unFollowUser(username: string, userDetail: UserParams) {
+    const userInfo = await this.userProfileRepo.findOneBy({
+      username: username,
+    });
+
+    if (userInfo === null) {
+      throw new NotFoundException('Username Not Found');
+    }
+
+    const targetId = userInfo.userId;
+    const checkFollow = await this.checkFollowingExits(targetId, userDetail.id);
+
+    if (checkFollow) {
+      const findId = await this.userFollowRepo.findOne({
+        where: {
+          followerId: targetId,
+          userId: userDetail.id,
+        },
+      });
+      const addFollower = await this.userFollowRepo.delete(findId.id);
+    }
+
+    return await this.returnProfile(username, userDetail);
+  }
 }
-
-

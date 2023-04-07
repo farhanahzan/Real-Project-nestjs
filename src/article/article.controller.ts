@@ -6,7 +6,7 @@ import { UpdateArticleDto } from './dto/UpdateArticleDto.dto';
 import { GetArticleQueryDto } from './dto/GetArticleQueryDto.dto';
 import { OptionalAuthGuard } from 'src/auth/utils/optionalAuth.guard';
 
-@Controller('api/articles')
+@Controller('articles')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 

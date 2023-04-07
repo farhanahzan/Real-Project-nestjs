@@ -7,6 +7,7 @@ import {
   Body,
   Req,
   Put,
+  Delete
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/CreateUser.dto';
@@ -17,7 +18,7 @@ import { OptionalAuthGuard } from 'src/auth/utils/optionalAuth.guard';
 
 
 
-@Controller('api')
+@Controller()
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
@@ -35,7 +36,6 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('users')
   async getCurrentUser(@Req() req) {
-  
     return this.userService.showCurrentUser(req.user);
   }
 
@@ -46,23 +46,27 @@ export class UsersController {
   }
 
   @Get('tags')
-  async getTags(){
-    return this.userService.getAllTags()
+  async getTags() {
+    return this.userService.getAllTags();
   }
 
   //profile
   //be in last position
   @UseGuards(OptionalAuthGuard)
   @Get('profiles/:username')
-  async getProfile(
-    @Param('username') username: string,
-    @Req() req,
-  ) {
-    return this.userService.returnProfile(
-      username,
-      req.user,
-    );
+  async getProfile(@Param('username') username: string, @Req() req) {
+    return this.userService.returnProfile(username, req.user);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('profiles/:username/follow')
+  async followUser(@Param('username') username: string, @Req() req) {
+    return this.userService.followUser(username, req.user);
+  }
 
+  @UseGuards(JwtAuthGuard)
+  @Delete('profiles/:username/follow')
+  async unFollowUser(@Param('username') username: string, @Req() req) {
+    return this.userService.unFollowUser(username, req.user);
+  }
 }
