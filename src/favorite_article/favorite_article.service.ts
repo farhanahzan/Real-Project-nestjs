@@ -7,6 +7,7 @@ import {UserParams } from 'src/users/utils/types';
 import { Repository } from 'typeorm';
 import {NotFoundException} from '@nestjs/common/exceptions'
 import { ArticleService } from 'src/article/article.service';
+import { FavoriteArticleRepository } from './favorite-article.repository';
 
 @Injectable()
 export class FavoriteArticleService {
@@ -17,15 +18,11 @@ export class FavoriteArticleService {
     private favoriteArticleRepo: Repository<FavoriteArticle>,
     @InjectRepository(Article)
     private articleRepo: Repository<Article>,
+    private favoriteArticleRepository:FavoriteArticleRepository
   ) {}
 
   async checkFavoriteExits(articleId: string, userId: string) {
-    const checkFavorite = await this.favoriteArticleRepo.find({
-      where: {
-        articleId: articleId,
-        userId: userId,
-      },
-    });
+    const checkFavorite = await this.favoriteArticleRepository.checkFavorite(articleId, userId)
     if (checkFavorite === null || checkFavorite.length === 0) {
       return false;
     } else {
@@ -33,18 +30,19 @@ export class FavoriteArticleService {
     }
   }
   async checkCount(articleId: string) {
-    const count = await this.favoriteArticleRepo.find({
-      where: { articleId: articleId },
-    });
-
+    const count = await this.favoriteArticleRepository.checkCount(articleId)
     if (count !== null) {
       return count.length;
     }
     return 0;
   }
 
+  async findOneBySlug(slug:string){
+    return await this.favoriteArticleRepository.findOneBySlug(slug)
+  }
+
   async favoriteArticle(slug: string, userDetail: UserParams) {
-    const articleInfo = await this.articleRepo.findOneBy({ slug: slug });
+    const articleInfo = await this.findOneBySlug(slug)
 
     if (articleInfo === null) {
       throw new NotFoundException('article not found');
@@ -58,11 +56,7 @@ export class FavoriteArticleService {
     );
 
     if (!checkFavorite) {
-      const addFavorite = this.favoriteArticleRepo.create({
-        articleId: articleId,
-        userId: userDetail.id,
-      });
-      await this.favoriteArticleRepo.save(addFavorite);
+     await this.favoriteArticleRepository.addFavorite(articleId, userDetail.id)
     }
 
     const formatArticle = await this.articleService.returnArticle(slug, userDetail);
@@ -77,7 +71,7 @@ export class FavoriteArticleService {
   }
 
   async unFavoriteArticle(slug: string, userDetail: UserParams) {
-    const articleInfo = await this.articleRepo.findOneBy({ slug: slug });
+    const articleInfo = await this.findOneBySlug(slug)
 
     if (articleInfo === null) {
       throw new NotFoundException('article not found');
@@ -91,14 +85,7 @@ export class FavoriteArticleService {
     );
 
     if (checkFavorite) {
-      const findFavorite = this.favoriteArticleRepo.findOneBy({
-        articleId: articleId,
-        userId: userDetail.id,
-      });
-
-      if(findFavorite !== null){
-        const deleteFavorite = this.favoriteArticleRepo.delete((await findFavorite).id)
-      }
+     await this.favoriteArticleRepository.deleteFavorite(articleId, userDetail.id)
       
     }
 

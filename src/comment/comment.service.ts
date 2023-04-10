@@ -20,8 +20,12 @@ export class CommentService {
     private userService: UsersService,
   ) {}
 
+  async findOneBySlug(slug: string) {
+    return await this.articleRepo.findOneBy({ slug: slug });
+  }
+
   async findArticleId(slug: string) {
-    const article = await this.articleRepo.findOneBy({ slug: slug });
+    const article = await this.findOneBySlug(slug);
 
     if (article === null) {
       throw new NotFoundException('article not found');
@@ -59,7 +63,7 @@ export class CommentService {
         articleId: articleId,
       },
     });
-   
+
     const comments = await Promise.all(
       allComments.map(async (comment) => {
         const formatComment = await this.returnComment(comment.id, userDetail);
@@ -68,8 +72,6 @@ export class CommentService {
     );
 
     return { comments };
-
-
   }
 
   async returnComment(commentId: string, userDetail: UserParams | any) {
@@ -85,7 +87,7 @@ export class CommentService {
       username.username,
       userDetail,
     );
-    const modifyauthor = {author:auther.profile}
+    const modifyauthor = { author: auther.profile };
 
     return {
       comment: {

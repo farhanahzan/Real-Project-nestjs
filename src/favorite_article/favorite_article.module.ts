@@ -8,6 +8,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ArticleModule } from 'src/article/article.module';
+import { FavoriteArticleRepository } from './favorite-article.repository';
 
 @Module({
   imports:[
@@ -24,7 +25,7 @@ import { ArticleModule } from 'src/article/article.module';
       })
     })
   ],
-  providers: [FavoriteArticleService],
+  providers: [FavoriteArticleService, FavoriteArticleRepository],
   controllers: [FavoriteArticleController],
   exports:[FavoriteArticleService]
 
