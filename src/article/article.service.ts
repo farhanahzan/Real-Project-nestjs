@@ -9,22 +9,22 @@ import { kebabCase, upperFirst, lowerCase } from 'lodash';
 
 import { Tag } from 'src/typeorm/entities/tag.entity';
 import { GetArticleQueryDto } from './dto/GetArticleQueryDto.dto';
-// import { UserProfile } from 'src/typeorm/entities/userProfile.entity';
+
 import { NotFoundException } from '@nestjs/common/exceptions';
 import { UsersService } from 'src/users/users.service';
-import { FavoriteArticleService } from 'src/favorite_article/favorite_article.service';
+
 import { FavoriteArticle } from 'src/typeorm/entities/favouriteArticle.entity';
-import { CreateUserParams, UserParams } from 'src/users/utils/types';
+import { UserParams } from 'src/users/utils/types';
 import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
 import { User } from 'src/typeorm/entities/user.entity';
+import { AricleRepository } from './article.repository';
 
 @Injectable()
 export class ArticleService {
   constructor(
     @Inject(UsersService)
     private readonly userService: UsersService,
-    // @InjectRepository(UserProfile)
-    // private userProfileRepo: Repository<UserProfile>,
+
     @InjectRepository(Article)
     private articleRepo: Repository<Article>,
     @InjectRepository(Tag)
@@ -35,7 +35,18 @@ export class ArticleService {
     private userFollowRepo: Repository<UserFollow>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+
+    private articleRepository: AricleRepository,
   ) {}
+
+  async findOneTagByName(tagName: string) {
+    return await this.articleRepository.findOneTagByName(tagName);
+  }
+
+  async createTag(tagName: string) {
+    const newTag = await this.articleRepository.createTag(tagName);
+    return newTag;
+  }
 
   async createArticle(
     articleDetail: CreateArticleParams,
@@ -45,21 +56,20 @@ export class ArticleService {
 
     //save tag
     for (const tagName of tagList) {
-      let newTag = await this.tagRepo.findOneBy({ tag: tagName });
+      let newTag = await this.findOneTagByName(tagName);
 
       if (newTag === null) {
-        const saveTag = this.tagRepo.create({ tag: tagName });
-        await this.tagRepo.save(saveTag);
+        await this.createTag(tagName);
       }
     }
 
-    const newArticle = this.articleRepo.create({
-      userId: userDetail.id,
-      ...articleDetail.article,
-      slug: await this.generateTitleToSlug(title),
-    });
+    const generateSlug = await this.generateTitleToSlug(title);
 
-    const savedArticle = await this.articleRepo.save(newArticle);
+    const savedArticle = await this.articleRepository.createArticle(
+      userDetail.id,
+      articleDetail,
+      generateSlug,
+    );
 
     return this.returnArticle(savedArticle.slug, userDetail);
   }
@@ -72,14 +82,18 @@ export class ArticleService {
     return upperFirst(lowerCase(slug));
   }
 
+  async findOneBySlug(slug: string) {
+    return await this.articleRepo.findOneBy({ slug: slug });
+  }
+
   async updateArticle(
     articleDetail: UpdateArticleParams,
     articleSlug: string,
     userDetail: UserParams,
   ) {
-    const { slug, ...rest } = articleDetail.article;
+    const { slug,...rest } = articleDetail.article;
 
-    const articleInfo = await this.articleRepo.findOneBy({ slug: articleSlug });
+    const articleInfo = await this.findOneBySlug(articleSlug);
 
     if (articleInfo === null) {
       throw new NotFoundException('article not found');
@@ -88,39 +102,40 @@ export class ArticleService {
       const newSlug = await this.generateTitleToSlug(
         articleDetail.article.title,
       );
-      const update = await this.articleRepo.update(
-        { slug: articleSlug },
-        { ...rest, slug: newSlug },
-      );
+
+      await this.articleRepository.updateArticle(articleDetail.article, articleSlug, newSlug)
+      // await this.articleRepo.update(
+      //   { slug: articleSlug },
+      //   { ...rest, slug: newSlug },
+      // );
       return await this.returnArticle(newSlug, userDetail);
     } else {
-      const update = await this.articleRepo.update(
-        { slug: articleSlug },
-        { ...rest },
+      await this.articleRepository.updateArticle(
+        articleDetail.article,
+        articleSlug,
+        
       );
+        await this.articleRepository.updateArticle(
+          articleDetail.article,
+          articleSlug,
+        );
+      // const update = await this.articleRepo.update(
+      //   { slug: articleSlug },
+      //   { ...rest },
+      // );
       return await this.returnArticle(articleSlug, userDetail);
     }
   }
 
   async deleteArticle(articleSlug: string) {
-    // await this.findArticleBySlug(articleSlug);
-
-    return await this.articleRepo.delete({ slug: articleSlug });
+    return await this.articleRepository.deleteArticle(articleSlug);
   }
 
   async getAllArticle(limit: number, offset: number) {
-    return this.articleRepo.find({
-      order: {
-        createdAt: 'DESC',
-      },
-      skip: offset,
-      take: limit,
-    });
+    return await this.articleRepository.getAllArticle(limit, offset);
   }
   async findArticleBySlug(slug: string) {
-    const singleArticle = await this.articleRepo.findOneBy({
-      slug: slug,
-    });
+    const singleArticle = await this.findOneBySlug(slug);
 
     if (singleArticle === null) {
       throw new NotFoundException('article not Found');
@@ -128,17 +143,23 @@ export class ArticleService {
     return singleArticle;
   }
   async findArticleBYAuther(auther: string) {
-    const autherId = await this.userRepo.findOneBy({ username: auther });
+    return await this.articleRepository.findArticleBYAuther(auther);
+  }
 
-    return autherId.id;
+  async findOneByUsername(username: string) {
+    return await this.articleRepository.findOneByUsername(username);
   }
 
   async findUserId(username: string) {
-    const user = await this.userRepo.findOneBy({ username: username });
+    const user = await this.findOneByUsername(username);
     if (user === null) {
       throw new NotFoundException('username not found');
     }
     return user.id;
+  }
+
+  async findFavoriteArticle(userId: string) {
+    return await this.articleRepository.findFavoriteArticle(userId);
   }
 
   async getArticles(query: GetArticleQueryDto, user: any | UserParams) {
@@ -148,10 +169,8 @@ export class ArticleService {
 
     if (favorited) {
       const favoritedUserId = await this.findUserId(favorited);
-      const findFavorite = await this.favoriteArticleRepo.find({
-        select: { articleId: true },
-        where: { userId: favoritedUserId },
-      });
+
+      const findFavorite = await this.findFavoriteArticle(favoritedUserId);
 
       const favoriteArticleIds = findFavorite.map(
         (article) => article.articleId,
@@ -183,16 +202,17 @@ export class ArticleService {
     );
     return { articles, articlesCount: articles.length };
   }
+  async findFollowerById(userId:string) {
+    return await this.articleRepository.findFollowerById(userId)
+  }
 
   async feedArticle(query: GetArticleQueryDto, userDetail: UserParams) {
     let { limit = 20, offset = 0 } = query;
 
     let filterArticle = await this.getAllArticle(limit, offset);
 
-    const findFollowers = await this.userFollowRepo.find({
-      select: { followerId: true },
-      where: { userId: userDetail.id },
-    });
+    const findFollowers = await this.findFollowerById(userDetail.id)
+    
 
     const followerIds = findFollowers.map((follower) => follower.followerId);
 
@@ -212,29 +232,32 @@ export class ArticleService {
     return { articles, articlesCount: articles.length };
   }
 
-  async checkCount(articleId: string) {
-    const count = await this.favoriteArticleRepo.find({
-      where: { articleId: articleId },
-    });
+  async findFavoriteArticleByArticleId(articleId:string){
+    return await this.articleRepository.findFavoriteArticleByArticleId(articleId)
+  }
 
-    if (count !== null) {
-      return count.length;
+  async checkCount(articleId: string) {
+    const articlesCount = await this.findFavoriteArticleByArticleId(articleId)
+
+    if (articlesCount !== null) {
+      return articlesCount.length;
     }
     return 0;
   }
 
+
   async checkFavoriteExits(articleId: string, userId: string) {
-    const checkFavorite = await this.favoriteArticleRepo.find({
-      where: {
-        articleId: articleId,
-        userId: userId,
-      },
-    });
+    const checkFavorite = await this.articleRepository.checkFavoriteExits(articleId, userId)
+
     if (checkFavorite === null || checkFavorite.length === 0) {
       return false;
     } else {
       return true;
     }
+  }
+
+  async findOneUserById(userId:string){
+    return await this.articleRepository.findOneUserById(userId)
   }
 
   async returnArticle(articleSlug: string, user: any | UserParams) {
@@ -251,7 +274,7 @@ export class ArticleService {
       userId,
     } = singleArticle;
 
-    const auther = await this.userRepo.findOneBy({ id: userId });
+    const auther = await this.findOneUserById(userId)
     const { username } = auther;
 
     const authorProfile = await this.userService.returnProfile(username, user);

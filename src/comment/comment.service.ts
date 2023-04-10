@@ -12,11 +12,6 @@ import { CommentRepository } from './comment.repository';
 @Injectable()
 export class CommentService {
   constructor(
-    @InjectRepository(Comment)
-    private commentRepo: Repository<Comment>,
-    @InjectRepository(Article)
-    private articleRepo: Repository<Article>,
-
     @Inject(UsersService)
     private userService: UsersService,
     private commentRepository:CommentRepository

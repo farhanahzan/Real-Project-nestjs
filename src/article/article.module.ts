@@ -12,6 +12,7 @@ import { Tag } from 'src/typeorm/entities/tag.entity';
 import { FavoriteArticle } from 'src/typeorm/entities/favouriteArticle.entity';
 import { UsersModule } from 'src/users/users.module';
 import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
+import { AricleRepository } from './article.repository';
 // import { Comment } from 'src/typeorm/entities/comment.entity';
 
 @Module({
@@ -30,7 +31,7 @@ import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
     }),
   ],
   controllers: [ArticleController],
-  providers: [ArticleService],
+  providers: [ArticleService, AricleRepository],
   exports:[ArticleService]
 })
 export class ArticleModule {}
