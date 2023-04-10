@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { Article } from 'src/typeorm/entities/article.entity';
 import { NotFoundException } from '@nestjs/common/exceptions';
 import { UsersService } from 'src/users/users.service';
+import { CommentRepository } from './comment.repository';
 
 @Injectable()
 export class CommentService {
@@ -18,10 +19,11 @@ export class CommentService {
 
     @Inject(UsersService)
     private userService: UsersService,
+    private commentRepository:CommentRepository
   ) {}
 
   async findOneBySlug(slug: string) {
-    return await this.articleRepo.findOneBy({ slug: slug });
+    return await this.commentRepository.findOneBySlug(slug)
   }
 
   async findArticleId(slug: string) {
@@ -41,28 +43,19 @@ export class CommentService {
   ) {
     const articleId = await this.findArticleId(slug);
 
-    const newComment = this.commentRepo.create({
-      userId: userDetail.id,
-      articleId: articleId,
-      body: commentDetail.comment.body,
-    });
-    await this.commentRepo.save(newComment);
+    const newComment =await this.commentRepository.createComment(userDetail.id, articleId, commentDetail.comment.body)
 
     return this.returnComment(newComment.id, userDetail);
   }
 
   async deleteComment(commentId: string) {
-    return await this.commentRepo.delete({ id: commentId });
+    return await this.commentRepository.deleteComment(commentId)
   }
 
   async getAllComment(slug: string, userDetail: UserParams) {
     const articleId = await this.findArticleId(slug);
 
-    const allComments = await this.commentRepo.find({
-      where: {
-        articleId: articleId,
-      },
-    });
+    const allComments = await this.commentRepository.getAllComment(articleId)
 
     const comments = await Promise.all(
       allComments.map(async (comment) => {
@@ -74,8 +67,12 @@ export class CommentService {
     return { comments };
   }
 
+  async findOneById(commentId:string){
+    return await this.commentRepository.findOneById(commentId)
+  }
+
   async returnComment(commentId: string, userDetail: UserParams | any) {
-    const findComment = await this.commentRepo.findOneBy({ id: commentId });
+    const findComment = await this.findOneById(commentId)
     if (findComment === null) {
       throw new NotFoundException('Please add your first comment');
     }
