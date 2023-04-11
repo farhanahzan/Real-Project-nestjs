@@ -23,7 +23,7 @@ export class AuthService {
       userId: user.id,
     };
    
-    return this.userService.returnUser(payload.userId)
+    return this.userService.buildResponseUser(payload.userId)
   }
 
   async validateUser(authLoginDto: AuthLoginDto) {

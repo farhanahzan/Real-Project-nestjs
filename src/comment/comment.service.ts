@@ -18,27 +18,24 @@ export class CommentService {
   ) {}
 
   async findOneBySlug(slug: string) {
-    return await this.commentRepository.findOneBySlug(slug)
+     const article=  await this.commentRepository.findOneBySlug(slug)
+      if (article === null) {
+        throw new NotFoundException('article not found');
+      }
+      return article
   }
 
-  async findArticleId(slug: string) {
-    const article = await this.findOneBySlug(slug);
-
-    if (article === null) {
-      throw new NotFoundException('article not found');
-    }
-
-    return article.id;
-  }
+  
 
   async createComment(
     slug: string,
     userDetail: UserParams,
     commentDetail: CreateCommentParams,
   ) {
-    const articleId = await this.findArticleId(slug);
+    const article = await this.findOneBySlug(slug);
 
-    const newComment =await this.commentRepository.createComment(userDetail.id, articleId, commentDetail.comment.body)
+
+    const newComment =await this.commentRepository.createComment(userDetail.id, article.id, commentDetail.comment.body)
 
     return this.returnComment(newComment.id, userDetail);
   }
@@ -48,9 +45,9 @@ export class CommentService {
   }
 
   async getAllComment(slug: string, userDetail: UserParams) {
-    const articleId = await this.findArticleId(slug);
+    const article = await this.findOneBySlug(slug);
 
-    const allComments = await this.commentRepository.getAllComment(articleId)
+    const allComments = await this.commentRepository.getAllComment(article.id)
 
     const comments = await Promise.all(
       allComments.map(async (comment) => {
@@ -75,7 +72,7 @@ export class CommentService {
 
     const username = await this.userService.findById(userId);
 
-    const auther = await this.userService.returnProfile(
+    const auther = await this.userService.buildResponseProfile(
       username.username,
       userDetail,
     );

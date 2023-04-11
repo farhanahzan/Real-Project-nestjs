@@ -62,6 +62,6 @@ export class ArticleController {
     if (req.user) {
       user = req.user;
     }
-    return this.articleService.returnArticle(slug, user);
+    return this.articleService.buildResponseArticle(slug, user);
   }
 }

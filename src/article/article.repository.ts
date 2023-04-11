@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Article } from 'src/typeorm/entities/article.entity';
 import { Tag } from 'src/typeorm/entities/tag.entity';
 import { Repository } from 'typeorm';
-import { CreateArticleParams, UpdateArticleParams } from './utils/types';
+import { CreateArticleParams } from './utils/types';
 import { User } from 'src/typeorm/entities/user.entity';
 import { FavoriteArticle } from 'src/typeorm/entities/favouriteArticle.entity';
 import { UserFollow } from 'src/typeorm/entities/userFollow.entity';

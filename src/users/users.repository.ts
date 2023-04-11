@@ -1,14 +1,18 @@
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Tag } from "src/typeorm/entities/tag.entity";
-import { User } from "src/typeorm/entities/user.entity";
-import { UserFollow } from "src/typeorm/entities/userFollow.entity";
-import { Equal, Repository } from "typeorm";
-import { UserParams } from "./utils/types";
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Tag } from 'src/typeorm/entities/tag.entity';
+import { User } from 'src/typeorm/entities/user.entity';
+import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
+import { Equal, Repository } from 'typeorm';
+import { UpdateUserParams, UserParams } from './utils/types';
 import * as bcrypt from 'bcryptjs';
 
-
-import { UpdateUserDto } from "./dto/UpdataUser.dto";
+import { UpdateUserDto } from './dto/UpdataUser.dto';
 
 @Injectable()
 export class UsersRepository {
@@ -22,30 +26,46 @@ export class UsersRepository {
     private tagRepo: Repository<Tag>,
   ) {}
 
-  async signUp(user: UserParams) {
-    const newUser = this.userRepo.create({ ...user });
-    await this.userRepo.save(newUser);
+  async createUser(user: UserParams) {
+    try {
+      const newUser = this.userRepo.create({ ...user });
+      await this.userRepo.save(newUser);
 
-    return newUser;
+      return newUser;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
   }
 
   async findByEmail(email: string) {
-    return await this.userRepo.findOne({
-      where: {
-        email: email,
-      },
-    });
+    try {
+      return await this.userRepo.findOne({
+        where: {
+          email: email,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
   }
   async findByUsername(username: string) {
-    return await this.userRepo.findOne({
-      where: {
-        username: username,
-      },
-    });
+    try {
+      return await this.userRepo.findOne({
+        where: {
+          username: username,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
   }
 
   async findById(id: string) {
-    return await this.userRepo.findOne({ where: { id: id } });
+    try {
+      return await this.userRepo.findOne({ where: { id: id } });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
   }
 
   async countEmail(email: string) {
@@ -60,9 +80,9 @@ export class UsersRepository {
     });
   }
 
-  async updateUser(newUpdate: UpdateUserDto, currUser: UserParams) {
+  async updateUser(updateUserParms: UpdateUserParams, currUser: UserParams) {
     const id = currUser.id;
-    const { email, username, password, bio, image } = newUpdate.user;
+    const { email, username, password, bio, image } = updateUserParms.user;
     if (password) {
       const hashPassword = await bcrypt.hash(password, 10);
       await this.userRepo.update({ id: id }, { password: hashPassword });
@@ -74,7 +94,7 @@ export class UsersRepository {
       await this.userRepo.update({ id: id }, { bio, image });
     }
   }
-  async returnUser(id: string) {
+  async buildResponseUser(id: string) {
     return await this.userRepo.findOne({
       select: {
         email: true,
@@ -105,19 +125,23 @@ export class UsersRepository {
       followerId: targetId,
       userId: userId,
     });
-    await this.userFollowRepo.save(addFollower)
+    await this.userFollowRepo.save(addFollower);
 
-    return addFollower
+    return addFollower;
   }
 
   async deleteFollower(targetId: string, userId: string) {
+    try {
       const findId = await this.userFollowRepo.findOne({
         where: {
           followerId: targetId,
           userId: userId,
         },
       });
-      const addFollower = await this.userFollowRepo.delete(findId.id);
+
+      await this.userFollowRepo.delete(findId.id);
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
-  
 }

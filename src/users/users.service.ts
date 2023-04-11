@@ -2,13 +2,12 @@ import { Injectable} from '@nestjs/common';
 import { User as UserEntity } from '../typeorm/entities/user.entity';
 
 
-import { CreateUserParams, UserParams } from './utils/types';
+import { CreateUserParams, UpdateUserParams, UserParams } from './utils/types';
 import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common/exceptions';
 import { JwtService } from '@nestjs/jwt';
-import { UpdateUserDto } from './dto/UpdataUser.dto';
 
 import { UsersRepository } from './users.repository';
 
@@ -19,26 +18,28 @@ export class UsersService {
     private userRepository: UsersRepository,
   ) {}
 
+
   async signUp(userDetails: CreateUserParams) {
     const user = userDetails.user;
-    const { email, username, ...rest } = user;
+    const { email, username } = user;
+    
 
     const checkEmail = await this.findByEmail(email);
     const checkUsername = await this.findByUsername(username);
 
-    if (checkEmail) {
+    if (checkEmail !== null) {
       throw new ForbiddenException('Email Already exists');
     }
-    if (checkUsername) {
+    if (checkUsername !== null) {
       throw new ForbiddenException('Username Already exists');
     }
 
-    const newUser = await this.userRepository.signUp(user);
+    const newUser = await this.userRepository.createUser(user);
     const payload = {
       userId: newUser.id,
     };
 
-    return await this.returnUser(payload.userId);
+    return await this.buildResponseUser(payload.userId);
   }
 
   async showById(id: string): Promise<UserEntity> {
@@ -49,7 +50,11 @@ export class UsersService {
   }
 
   async findById(id: string) {
-    return await this.userRepository.findById(id);
+    const user= await this.userRepository.findById(id)
+     if (user === null) {
+       throw new NotFoundException('User Not Found');
+     }
+     return user
   }
 
   async findByEmail(email: string) {
@@ -60,7 +65,7 @@ export class UsersService {
   }
 
   async showCurrentUser(userDetails: UserParams) {
-    return await this.returnUser(userDetails.id);
+    return await this.buildResponseUser(userDetails.id);
   }
 
   async countEmail(email: string) {
@@ -71,10 +76,10 @@ export class UsersService {
     return await this.userRepository.countUsername(username);
   }
 
-  async updateUser(newUpdate: UpdateUserDto, currUser: UserParams) {
+  async updateUser(updateUserParms: UpdateUserParams, currUser: UserParams) {
     const id = currUser.id;
     // console.log(currUser)
-    const { email, username, password, bio, image } = newUpdate.user;
+    const { email, username } = updateUserParms.user;
 
     const checkEmail = await this.countEmail(email);
 
@@ -86,15 +91,15 @@ export class UsersService {
     if (checkUsername > 1) {
       throw new ForbiddenException('Username Already exists');
     }
-    await this.userRepository.updateUser(newUpdate, currUser);
+    await this.userRepository.updateUser(updateUserParms, currUser);
 
-    return this.returnUser(id);
+    return this.buildResponseUser(id);
   }
 
   //Profile
 
   //with login
-  async returnProfile(username: string, userDetail: any | UserParams) {
+  async buildResponseProfile(username: string, userDetail: any | UserParams) {
     const userProfileInfo = await this.findByUsername(username);
 
     const { bio, image } = userProfileInfo;
@@ -117,8 +122,8 @@ export class UsersService {
     };
   }
 
-  async returnUser(id: string) {
-    const userInfo = await this.userRepository.returnUser(id);
+  async buildResponseUser(id: string) {
+    const userInfo = await this.userRepository.buildResponseUser(id);
     const accessToken = this.jwtService.sign(id);
     return { user: { ...userInfo, accessToken: accessToken } };
   }
@@ -157,7 +162,7 @@ export class UsersService {
      await this.userRepository.addFollower(targetId, userDetail.id)
     }
 
-    return this.returnProfile(username, userDetail);
+    return this.buildResponseProfile(username, userDetail);
   }
 
   async unFollowUser(username: string, userDetail: UserParams) {
@@ -174,6 +179,6 @@ export class UsersService {
       await this.userRepository.deleteFollower(targetId, userDetail.id)
     }
 
-    return await this.returnProfile(username, userDetail);
+    return await this.buildResponseProfile(username, userDetail);
   }
 }

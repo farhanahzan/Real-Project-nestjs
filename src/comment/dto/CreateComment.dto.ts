@@ -1,6 +1,8 @@
+import { Type } from 'class-transformer';
 import {
   IsString,
   IsNotEmpty,
+  ValidateNested,
   
 } from 'class-validator';
 
@@ -11,6 +13,10 @@ export class CommentDto {
 
  
 }
-export class CreateCommentDto{
-comment:CommentDto
+
+export class CreateCommentDto {
+  @ValidateNested()
+  @Type(() => CommentDto)
+  @IsNotEmpty()
+  comment: CommentDto;
 }

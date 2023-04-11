@@ -1,4 +1,5 @@
-import { IsAlphanumeric, IsEmail, IsString, IsOptional, IsUrl} from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsAlphanumeric, IsEmail, IsString, IsOptional, IsUrl, ValidateNested, IsNotEmpty} from 'class-validator';
 
 export class UpdateDto {
   @IsOptional()
@@ -23,5 +24,8 @@ export class UpdateDto {
 }
 
 export class UpdateUserDto {
+  @ValidateNested()
+  @Type(() => UpdateDto)
+  @IsNotEmpty()
   user: UpdateDto;
 }

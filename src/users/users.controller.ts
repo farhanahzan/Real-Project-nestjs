@@ -24,6 +24,7 @@ export class UsersController {
 
   @Post('users')
   async signup(@Body() createUserDto: CreateUserDto) {
+    console.log('createUserDto:', createUserDto);
     return this.userService.signUp(createUserDto);
   }
 
@@ -55,7 +56,7 @@ export class UsersController {
   @UseGuards(OptionalAuthGuard)
   @Get('profiles/:username')
   async getProfile(@Param('username') username: string, @Req() req) {
-    return this.userService.returnProfile(username, req.user);
+    return this.userService.buildResponseProfile(username, req.user);
   }
 
   @UseGuards(JwtAuthGuard)

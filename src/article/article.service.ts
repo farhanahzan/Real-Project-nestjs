@@ -13,10 +13,8 @@ import { GetArticleQueryDto } from './dto/GetArticleQueryDto.dto';
 import { NotFoundException } from '@nestjs/common/exceptions';
 import { UsersService } from 'src/users/users.service';
 
-import { FavoriteArticle } from 'src/typeorm/entities/favouriteArticle.entity';
 import { UserParams } from 'src/users/utils/types';
-import { UserFollow } from 'src/typeorm/entities/userFollow.entity';
-import { User } from 'src/typeorm/entities/user.entity';
+
 import { AricleRepository } from './article.repository';
 
 @Injectable()
@@ -28,14 +26,6 @@ export class ArticleService {
     @InjectRepository(Article)
     private articleRepo: Repository<Article>,
     @InjectRepository(Tag)
-    private tagRepo: Repository<Tag>,
-    @InjectRepository(FavoriteArticle)
-    private favoriteArticleRepo: Repository<FavoriteArticle>,
-    @InjectRepository(UserFollow)
-    private userFollowRepo: Repository<UserFollow>,
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
-
     private articleRepository: AricleRepository,
   ) {}
 
@@ -71,7 +61,7 @@ export class ArticleService {
       generateSlug,
     );
 
-    return this.returnArticle(savedArticle.slug, userDetail);
+    return this.buildResponseArticle(savedArticle.slug, userDetail);
   }
 
   async generateTitleToSlug(title: string) {
@@ -91,7 +81,7 @@ export class ArticleService {
     articleSlug: string,
     userDetail: UserParams,
   ) {
-    const { slug,...rest } = articleDetail.article;
+    const { slug, ...rest } = articleDetail.article;
 
     const articleInfo = await this.findOneBySlug(articleSlug);
 
@@ -103,27 +93,24 @@ export class ArticleService {
         articleDetail.article.title,
       );
 
-      await this.articleRepository.updateArticle(articleDetail.article, articleSlug, newSlug)
-      // await this.articleRepo.update(
-      //   { slug: articleSlug },
-      //   { ...rest, slug: newSlug },
-      // );
-      return await this.returnArticle(newSlug, userDetail);
+      await this.articleRepository.updateArticle(
+        articleDetail.article,
+        articleSlug,
+        newSlug,
+      );
+
+      return await this.buildResponseArticle(newSlug, userDetail);
     } else {
       await this.articleRepository.updateArticle(
         articleDetail.article,
         articleSlug,
-        
       );
-        await this.articleRepository.updateArticle(
-          articleDetail.article,
-          articleSlug,
-        );
-      // const update = await this.articleRepo.update(
-      //   { slug: articleSlug },
-      //   { ...rest },
-      // );
-      return await this.returnArticle(articleSlug, userDetail);
+      await this.articleRepository.updateArticle(
+        articleDetail.article,
+        articleSlug,
+      );
+
+      return await this.buildResponseArticle(articleSlug, userDetail);
     }
   }
 
@@ -196,14 +183,17 @@ export class ArticleService {
 
     const articles = await Promise.all(
       filterArticle.map(async (article) => {
-        const formattedArticle = await this.returnArticle(article.slug, user);
+        const formattedArticle = await this.buildResponseArticle(
+          article.slug,
+          user,
+        );
         return formattedArticle.article;
       }),
     );
     return { articles, articlesCount: articles.length };
   }
-  async findFollowerById(userId:string) {
-    return await this.articleRepository.findFollowerById(userId)
+  async findFollowerById(userId: string) {
+    return await this.articleRepository.findFollowerById(userId);
   }
 
   async feedArticle(query: GetArticleQueryDto, userDetail: UserParams) {
@@ -211,8 +201,7 @@ export class ArticleService {
 
     let filterArticle = await this.getAllArticle(limit, offset);
 
-    const findFollowers = await this.findFollowerById(userDetail.id)
-    
+    const findFollowers = await this.findFollowerById(userDetail.id);
 
     const followerIds = findFollowers.map((follower) => follower.followerId);
 
@@ -222,7 +211,7 @@ export class ArticleService {
 
     const articles = await Promise.all(
       filterArticle.map(async (article) => {
-        const formattedArticle = await this.returnArticle(
+        const formattedArticle = await this.buildResponseArticle(
           article.slug,
           userDetail,
         );
@@ -232,12 +221,14 @@ export class ArticleService {
     return { articles, articlesCount: articles.length };
   }
 
-  async findFavoriteArticleByArticleId(articleId:string){
-    return await this.articleRepository.findFavoriteArticleByArticleId(articleId)
+  async findFavoriteArticleByArticleId(articleId: string) {
+    return await this.articleRepository.findFavoriteArticleByArticleId(
+      articleId,
+    );
   }
 
   async checkCount(articleId: string) {
-    const articlesCount = await this.findFavoriteArticleByArticleId(articleId)
+    const articlesCount = await this.findFavoriteArticleByArticleId(articleId);
 
     if (articlesCount !== null) {
       return articlesCount.length;
@@ -245,9 +236,11 @@ export class ArticleService {
     return 0;
   }
 
-
   async checkFavoriteExits(articleId: string, userId: string) {
-    const checkFavorite = await this.articleRepository.checkFavoriteExits(articleId, userId)
+    const checkFavorite = await this.articleRepository.checkFavoriteExits(
+      articleId,
+      userId,
+    );
 
     if (checkFavorite === null || checkFavorite.length === 0) {
       return false;
@@ -256,11 +249,11 @@ export class ArticleService {
     }
   }
 
-  async findOneUserById(userId:string){
-    return await this.articleRepository.findOneUserById(userId)
+  async findOneUserById(userId: string) {
+    return await this.articleRepository.findOneUserById(userId);
   }
 
-  async returnArticle(articleSlug: string, user: any | UserParams) {
+  async buildResponseArticle(articleSlug: string, user: any | UserParams) {
     const singleArticle = await this.findArticleBySlug(articleSlug);
     const {
       id: articleId,
@@ -274,10 +267,13 @@ export class ArticleService {
       userId,
     } = singleArticle;
 
-    const auther = await this.findOneUserById(userId)
+    const auther = await this.findOneUserById(userId);
     const { username } = auther;
 
-    const authorProfile = await this.userService.returnProfile(username, user);
+    const authorProfile = await this.userService.buildResponseProfile(
+      username,
+      user,
+    );
     const newAuthorProfile = {
       author: authorProfile.profile,
     };

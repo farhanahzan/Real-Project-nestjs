@@ -14,10 +14,7 @@ export class FavoriteArticleService {
   constructor(
     @Inject(forwardRef(() => ArticleService))
     private articleService: ArticleService,
-    @InjectRepository(FavoriteArticle)
-    private favoriteArticleRepo: Repository<FavoriteArticle>,
-    @InjectRepository(Article)
-    private articleRepo: Repository<Article>,
+
     private favoriteArticleRepository:FavoriteArticleRepository
   ) {}
 
@@ -59,7 +56,10 @@ export class FavoriteArticleService {
      await this.favoriteArticleRepository.addFavorite(articleId, userDetail.id)
     }
 
-    const formatArticle = await this.articleService.returnArticle(slug, userDetail);
+    const formatArticle = await this.articleService.buildResponseArticle(
+      slug,
+      userDetail,
+    );
 
     formatArticle.article.favorited = await this.checkFavoriteExits(
       articleId,
@@ -89,7 +89,10 @@ export class FavoriteArticleService {
       
     }
 
-    const formatArticle = await this.articleService.returnArticle(slug, userDetail);
+    const formatArticle = await this.articleService.buildResponseArticle(
+      slug,
+      userDetail,
+    );
 
     formatArticle.article.favorited = await this.checkFavoriteExits(
       articleId,

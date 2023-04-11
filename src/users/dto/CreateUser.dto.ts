@@ -1,10 +1,12 @@
+import { Type } from 'class-transformer';
 import {
   IsAlphanumeric,
   IsEmail,
   IsString,
   IsNotEmpty,
   IsOptional,
-  IsUrl
+  IsUrl,
+  ValidateNested
 } from 'class-validator';
 
 export class UserDto{
@@ -29,6 +31,9 @@ export class UserDto{
     bio:string
 }
 
-export class CreateUserDto{
-  user:UserDto
+export class CreateUserDto {
+  @ValidateNested()
+  @Type(() => UserDto)
+  @IsNotEmpty()
+  user: UserDto;
 }
