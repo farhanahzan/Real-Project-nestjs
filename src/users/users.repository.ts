@@ -69,65 +69,93 @@ export class UsersRepository {
   }
 
   async countEmail(email: string) {
-    return await this.userRepo.count({
-      where: { email: Equal(email) },
-    });
+    try {
+      return await this.userRepo.count({
+        where: { email: Equal(email) },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 
   async countUsername(username: string) {
-    return await this.userRepo.count({
-      where: { username: Equal(username) },
-    });
+    try {
+      return await this.userRepo.count({
+        where: { username: Equal(username) },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 
   async updateUser(updateUserParms: UpdateUserParams, currUser: UserParams) {
-    const id = currUser.id;
-    const { email, username, password, bio, image } = updateUserParms.user;
-    if (password) {
-      const hashPassword = await bcrypt.hash(password, 10);
-      await this.userRepo.update({ id: id }, { password: hashPassword });
-    }
-    if (email || username) {
-      await this.userRepo.update({ id: id }, { email, username });
-    }
-    if (bio || image) {
-      await this.userRepo.update({ id: id }, { bio, image });
+    try {
+      const id = currUser.id;
+      const { email, username, password, bio, image } = updateUserParms.user;
+      if (password) {
+        const hashPassword = await bcrypt.hash(password, 10);
+        await this.userRepo.update({ id: id }, { password: hashPassword });
+      }
+      if (email || username) {
+        await this.userRepo.update({ id: id }, { email, username });
+      }
+      if (bio || image) {
+        await this.userRepo.update({ id: id }, { bio, image });
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(error);
     }
   }
   async buildResponseUser(id: string) {
-    return await this.userRepo.findOne({
-      select: {
-        email: true,
-        username: true,
-        bio: true,
-        image: true,
-      },
+    try {
+      return await this.userRepo.findOne({
+        select: {
+          email: true,
+          username: true,
+          bio: true,
+          image: true,
+        },
 
-      where: { id: id },
-    });
+        where: { id: id },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 
   async checkFollwing(targetId: string, userId: string) {
-    return await this.userFollowRepo.find({
-      where: {
-        followerId: targetId,
-        userId: userId,
-      },
-    });
+    try {
+      return await this.userFollowRepo.find({
+        where: {
+          followerId: targetId,
+          userId: userId,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 
   async getAllTags() {
-    return await this.tagRepo.find();
+    try {
+      return await this.tagRepo.find();
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 
   async addFollower(targetId: string, userId: string) {
-    const addFollower = this.userFollowRepo.create({
-      followerId: targetId,
-      userId: userId,
-    });
-    await this.userFollowRepo.save(addFollower);
+    try {
+      const addFollower = this.userFollowRepo.create({
+        followerId: targetId,
+        userId: userId,
+      });
+      await this.userFollowRepo.save(addFollower);
 
-    return addFollower;
+      return addFollower;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 
   async deleteFollower(targetId: string, userId: string) {

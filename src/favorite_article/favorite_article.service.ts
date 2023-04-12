@@ -35,7 +35,11 @@ export class FavoriteArticleService {
   }
 
   async findOneBySlug(slug:string){
-    return await this.favoriteArticleRepository.findOneBySlug(slug)
+    const article = await this.favoriteArticleRepository.findOneBySlug(slug)
+    if(article === null){
+      throw new NotFoundException('Article Not Found')
+    }
+    return article
   }
 
   async favoriteArticle(slug: string, userDetail: UserParams) {

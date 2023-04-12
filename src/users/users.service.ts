@@ -1,6 +1,5 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { User as UserEntity } from '../typeorm/entities/user.entity';
-
 
 import { CreateUserParams, UpdateUserParams, UserParams } from './utils/types';
 import {
@@ -18,11 +17,9 @@ export class UsersService {
     private userRepository: UsersRepository,
   ) {}
 
-
   async signUp(userDetails: CreateUserParams) {
     const user = userDetails.user;
     const { email, username } = user;
-    
 
     const checkEmail = await this.findByEmail(email);
     const checkUsername = await this.findByUsername(username);
@@ -50,15 +47,19 @@ export class UsersService {
   }
 
   async findById(id: string) {
-    const user= await this.userRepository.findById(id)
-     if (user === null) {
-       throw new NotFoundException('User Not Found');
-     }
-     return user
+    const user = await this.userRepository.findById(id);
+    if (user === null) {
+      throw new NotFoundException('User Not Found');
+    }
+    return user;
   }
 
   async findByEmail(email: string) {
-    return await this.userRepository.findByEmail(email);
+    const user = await this.userRepository.findByEmail(email);
+    if (user === null) {
+      throw new NotFoundException('User Not Found');
+    }
+    return user;
   }
   async findByUsername(username: string) {
     return await this.userRepository.findByUsername(username);
@@ -69,11 +70,19 @@ export class UsersService {
   }
 
   async countEmail(email: string) {
-    return await this.userRepository.countEmail(email);
+    const user = await this.userRepository.countEmail(email);
+    if (user === null) {
+      throw new NotFoundException('User Not Found');
+    }
+    return user;
   }
 
   async countUsername(username: string) {
-    return await this.userRepository.countUsername(username);
+    const user = await this.userRepository.countUsername(username);
+    if (user === null) {
+      throw new NotFoundException('User Not Found');
+    }
+    return user;
   }
 
   async updateUser(updateUserParms: UpdateUserParams, currUser: UserParams) {
@@ -129,17 +138,23 @@ export class UsersService {
   }
 
   async getAllTags() {
-    const findTags = await this.userRepository.getAllTags()
+    const findTags = await this.userRepository.getAllTags();
+
+    if (findTags === null || findTags.length === 0) {
+      throw new NotFoundException('Tags Not Found');
+    }
+
     const tags = findTags.map((tag) => tag.tag);
     return { tags };
   }
 
   //user_follower
 
-
-
   async checkFollowingExits(targetId: string, userId: string) {
-    const checkFollowing = await this.userRepository.checkFollwing(targetId, userId)
+    const checkFollowing = await this.userRepository.checkFollwing(
+      targetId,
+      userId,
+    );
 
     if (checkFollowing === null || checkFollowing.length === 0) {
       return false;
@@ -149,7 +164,7 @@ export class UsersService {
   }
 
   async followUser(username: string, userDetail: UserParams) {
-    const userInfo = await this.findByUsername(username)
+    const userInfo = await this.findByUsername(username);
 
     if (userInfo === null) {
       throw new NotFoundException('Username Not Found');
@@ -159,7 +174,7 @@ export class UsersService {
     const checkFollow = await this.checkFollowingExits(targetId, userDetail.id);
 
     if (!checkFollow) {
-     await this.userRepository.addFollower(targetId, userDetail.id)
+      await this.userRepository.addFollower(targetId, userDetail.id);
     }
 
     return this.buildResponseProfile(username, userDetail);
@@ -176,7 +191,7 @@ export class UsersService {
     const checkFollow = await this.checkFollowingExits(targetId, userDetail.id);
 
     if (checkFollow) {
-      await this.userRepository.deleteFollower(targetId, userDetail.id)
+      await this.userRepository.deleteFollower(targetId, userDetail.id);
     }
 
     return await this.buildResponseProfile(username, userDetail);
